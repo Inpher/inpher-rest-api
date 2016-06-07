@@ -1,0 +1,10 @@
+*DS_Store
+.idea/codeStyleSettings.xml
+.idea/
+*.iml
+*.csv
+**/doc/
+**/target/
+.project
+.settings
+.classpath
