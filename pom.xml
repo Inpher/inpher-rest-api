@@ -105,6 +105,24 @@
 
 	<build>
 		<finalName>rest.service</finalName>
+		<plugins>
+			<plugin>
+				<groupId>com.webcohesion.enunciate</groupId>
+				<artifactId>enunciate-maven-plugin</artifactId>
+				<version>2.5.0</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>docs</goal>
+						</goals>
+						<configuration>
+							<!-- the directory where to put the docs -->
+							<docsDir>${project.build.directory}/docs</docsDir>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 	</build>
 
 

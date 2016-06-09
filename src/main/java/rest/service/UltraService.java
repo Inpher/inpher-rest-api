@@ -3,6 +3,7 @@ package rest.service;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Paths;
 import java.security.Security;
 import java.util.Arrays;
 import java.util.Collection;
@@ -55,7 +56,7 @@ import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
 @Path("/")
-public class MyJerseyPage {
+public class UltraService {
 	private static InpherClient inpherClient;
 	private static Map<String, SearchableFileSystem> sfss;
 	private static String AUTH_TOKEN = "auth_token";
@@ -64,7 +65,7 @@ public class MyJerseyPage {
 		Security.addProvider(new BouncyCastleProvider());
 		sfss = new ConcurrentHashMap<String, SearchableFileSystem>();
 		try {
-			inpherClient = InpherClient.getClient("D:\\workspace\\rest.service\\src\\config.properties");
+			inpherClient = InpherClient.getClient();//InpherClient.getClient("D:\\workspace\\rest.service\\src\\config.properties");
 		} catch (InpherException e) {
 			e.printStackTrace();
 		}
@@ -73,7 +74,7 @@ public class MyJerseyPage {
 	@GET
 	@Produces(MediaType.TEXT_HTML)
 	public String sayHtmlHello() {
-		return "Hello from Ultra";
+		return "Hello from Ultra " + Paths.get(".").toAbsolutePath().normalize().toString();
 	}
 
 	@Path("register")
