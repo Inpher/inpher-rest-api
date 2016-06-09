@@ -5,13 +5,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.Security;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.CookieParam;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -30,10 +32,12 @@ import org.inpher.clientapi.InpherClient;
 import org.inpher.clientapi.InpherUser;
 import org.inpher.clientapi.RankedSearchResult;
 import org.inpher.clientapi.SearchResponse;
+import org.inpher.clientapi.crypto.Certificate;
 import org.inpher.clientapi.efs.BackendIterator;
 import org.inpher.clientapi.efs.Element;
 import org.inpher.clientapi.efs.SearchableFileSystem;
 import org.inpher.clientapi.efs.exceptions.ParentNotFoundException;
+import org.inpher.clientapi.efs.exceptions.PathAlreadyExistsException;
 import org.inpher.clientapi.efs.exceptions.PathIsDirectoryException;
 import org.inpher.clientapi.efs.exceptions.PathNotFoundException;
 import org.inpher.clientapi.exceptions.AuthenticationException;
@@ -69,7 +73,7 @@ public class MyJerseyPage {
 	@GET
 	@Produces(MediaType.TEXT_HTML)
 	public String sayHtmlHello() {
-		return "Hello from Jersey";
+		return "Hello from Ultra";
 	}
 
 	@Path("register")
@@ -105,10 +109,89 @@ public class MyJerseyPage {
 		return Response.status(201).entity(result).cookie(cookie).build();
 	}
 
+	@Path("logout")
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response logout(@CookieParam("auth_token") Cookie cookie) {
+		if (cookie == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		if (sfs == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		inpherClient.logoutUser(sfs);
+		return Response.status(201).entity("logged out").build();
+	}
+
+	@Path("userCertificate")
+	@GET
+	public Response userCertificate(@QueryParam("username") String username, @CookieParam("auth_token") Cookie cookie) {
+		if (cookie == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		if (sfs == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		Certificate cert = inpherClient.getUserCertificate(username);
+		return Response.status(201).entity(cert.toString()).build();
+	}
+
+	// @Path("submitGroupCertificate")
+	// @POST
+	// public Response submitGroupCertificate(@FormParam("cert") String
+	// certificate,
+	// @FormParam("groupName") String groupName, @CookieParam("auth_token")
+	// Cookie cookie) {
+	// if (cookie == null) {
+	// return Response.status(409).entity("Authentication failed").build();
+	// }
+	// SearchableFileSystem sfs = sfss.get(cookie.getValue());
+	// if (sfs == null) {
+	// return Response.status(409).entity("Authentication failed").build();
+	// }
+	// inpherClient.submitGroupCertificate(new Certificate(cert), groupName);
+	// return Response.status(201).entity("certificate submitted").build();
+	// }
+
+	@Path("doesSharingGroupExists")
+	@GET
+	public Response doesSharingGroupExists(@QueryParam("groupName") String groupName,
+			@CookieParam("auth_token") Cookie cookie) {
+		if (cookie == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		if (sfs == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		inpherClient.doesSharingGroupExists(groupName);
+		return Response.status(201).entity("logged out").build();
+	}
+
+	@Path("createSharingGroup")
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response createSharingGroup(GroupRequest groupRequest, @CookieParam("auth_token") Cookie cookie) {
+		if (cookie == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		if (sfs == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		inpherClient.createSharingGroup(sfs, groupRequest.getGroupName(), groupRequest.getUsernames());
+		return Response.status(201).entity("logged out").build();
+	}
+
 	@Path("mkdir")
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response mkdir(String dir, @CookieParam("auth_token") Cookie cookie) {
+		if (cookie == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
 		SearchableFileSystem sfs = sfss.get(cookie.getValue());
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -130,6 +213,9 @@ public class MyJerseyPage {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response listDir(String dir, @CookieParam("auth_token") Cookie cookie) {
+		if (cookie == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
 		SearchableFileSystem sfs = sfss.get(cookie.getValue());
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -155,6 +241,9 @@ public class MyJerseyPage {
 	public Response uploadFile(@FormDataParam("content") final InputStream content,
 			@FormDataParam("content") FormDataContentDisposition contentDispositionHeader,
 			@FormDataParam("name") String name, @CookieParam("auth_token") Cookie cookie) {
+		if (cookie == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
 		SearchableFileSystem sfs = sfss.get(cookie.getValue());
 
 		if (sfs == null) {
@@ -205,8 +294,8 @@ public class MyJerseyPage {
 	}
 
 	@Path("delete")
-	@GET
-	public Response delete(@QueryParam("fileName") String fileName, @QueryParam("recursive") boolean recursive,
+	@DELETE
+	public Response delete(@QueryParam("path") String path, @QueryParam("recursive") boolean recursive,
 			@CookieParam("auth_token") Cookie cookie) {
 		if (cookie == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -217,7 +306,7 @@ public class MyJerseyPage {
 			return Response.status(409).entity("Authentication failed").build();
 		}
 		try {
-			sfs.delete(FrontendPath.parse(fileName), recursive);
+			sfs.delete(FrontendPath.parse(path), recursive);
 		} catch (NonEmptyDirectoryException e) {
 			return Response.status(400).entity("The path points to a directory that is not emptry").build();
 		} catch (PathNotOwnedByUserException e) {
@@ -225,6 +314,30 @@ public class MyJerseyPage {
 					.build();
 		} catch (PathNotFoundException e) {
 			return Response.status(400).entity("The resource does not exist.").build();
+		} catch (InpherRuntimeException e) {
+			return Response.status(400).entity("An error occured. Please check: " + e.getMessage()).build();
+		}
+		return Response.ok("resource deleted").build();
+	}
+
+	@Path("move")
+	@GET
+	public Response move(@QueryParam("oldPath") String oldPath, @QueryParam("newPath") String newPath,
+			@CookieParam("auth_token") Cookie cookie) {
+		if (cookie == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+
+		if (sfs == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		try {
+			sfs.move(FrontendPath.parse(oldPath), FrontendPath.parse(newPath));
+		} catch (PathNotFoundException e) {
+			return Response.status(400).entity("The resource does not exist.").build();
+		} catch (PathAlreadyExistsException e) {
+			return Response.status(400).entity("The new path is already in use.").build();
 		} catch (InpherRuntimeException e) {
 			return Response.status(400).entity("An error occured. Please check: " + e.getMessage()).build();
 		}
@@ -255,7 +368,62 @@ public class MyJerseyPage {
 		return Response.ok(ret.toString()).build();
 	}
 
-	@Path("path")
+	@Path("search")
+	@GET
+	public Response search(@QueryParam("keywords") String keywords, @QueryParam("page") int page,
+			@QueryParam("numRes") int numRes, @CookieParam("auth_token") Cookie cookie) {
+		if (cookie == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+
+		if (sfs == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		String[] words = keywords.split(" ");
+		SearchResponse results = sfs.search(Arrays.asList(words), page, numRes);
+		JSONArray arr = new JSONArray();
+		for (RankedSearchResult el : results.getAllRankedSearchResults()) {
+			arr.add(el);
+		}
+
+		JSONObject ret = new JSONObject();
+		ret.put("totalHits", results.getTotalHits());
+		ret.put("results", arr);
+		return Response.ok(ret.toString()).build();
+	}
+
+	@Path("isFile")
+	@GET
+	public Response isFile(@QueryParam("path") String path, @CookieParam("auth_token") Cookie cookie) {
+		if (cookie == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+
+		if (sfs == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		boolean exists = sfs.isFile(FrontendPath.parse(path));
+		return Response.ok(exists).build();
+	}
+
+	@Path("isDirectory")
+	@GET
+	public Response isDirectory(@QueryParam("path") String path, @CookieParam("auth_token") Cookie cookie) {
+		if (cookie == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+
+		if (sfs == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		boolean exists = sfs.isDirectory(FrontendPath.parse(path));
+		return Response.ok(exists).build();
+	}
+
+	@Path("exists")
 	@GET
 	public Response exists(@QueryParam("path") String path, @CookieParam("auth_token") Cookie cookie) {
 		if (cookie == null) {
@@ -268,6 +436,51 @@ public class MyJerseyPage {
 		}
 		boolean exists = sfs.exists(FrontendPath.parse(path));
 		return Response.ok(exists).build();
+	}
+
+	@Path("listGroups")
+	@GET
+	public Response listGroups(@CookieParam("auth_token") Cookie cookie) {
+		if (cookie == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+
+		if (sfs == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		Collection<String> groups = sfs.listGroups();
+		JSONArray arr = new JSONArray();
+		for (String group : groups) {
+			arr.add(group);
+		}
+		return Response.ok(arr).build();
+	}
+
+	@Path("listAuthorizedGroups")
+	@GET
+	public Response listAuthorizedGroups(@QueryParam("path") String path, @CookieParam("auth_token") Cookie cookie) {
+		if (cookie == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+
+		if (sfs == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		Collection<String> groups = null;
+		try {
+			groups = sfs.getAuthorizedGroups(FrontendPath.parse(path));
+		} catch (PathNotFoundException e) {
+			return Response.status(400).entity("The resource does not exist.").build();
+		} catch (InpherRuntimeException e) {
+			return Response.status(400).entity("An error occured. Please check: " + e.getMessage()).build();
+		}
+		JSONArray arr = new JSONArray();
+		for (String group : groups) {
+			arr.add(group);
+		}
+		return Response.ok(arr).build();
 	}
 
 	@Path("isMember")
@@ -393,6 +606,38 @@ public class MyJerseyPage {
 		} catch (InpherRuntimeException e) {
 			return Response.status(400).entity("An error occured. Please check: " + e.getMessage()).build();
 		}
-		return Response.ok("element shared").build();
+		return Response.ok("element unshared").build();
+	}
+
+	@Path("refreshGroupKeyring")
+	@GET
+	public Response refreshGroupKeyring(@QueryParam("groupName") String groupName,
+			@CookieParam("auth_token") Cookie cookie) {
+		if (cookie == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+
+		if (sfs == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		sfs.refreshGroupKeyring(groupName);
+		return Response.ok("group keyring is refreshed").build();
+	}
+
+	@Path("refreshUserKeyring")
+	@POST
+	public Response refreshUserKeyring(@FormParam("password") String password,
+			@CookieParam("auth_token") Cookie cookie) {
+		if (cookie == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+
+		if (sfs == null) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+		sfs.refreshUserKeyring(password);
+		return Response.ok("user keyring is refreshed").build();
 	}
 }
