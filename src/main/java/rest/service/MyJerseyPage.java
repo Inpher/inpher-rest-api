@@ -166,8 +166,8 @@ public class MyJerseyPage {
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		inpherClient.doesSharingGroupExists(groupName);
-		return Response.status(201).entity("logged out").build();
+		Boolean exists = inpherClient.doesSharingGroupExists(groupName);
+		return Response.status(201).entity(exists.toString()).build();
 	}
 
 	@Path("createSharingGroup")
@@ -209,10 +209,10 @@ public class MyJerseyPage {
 	}
 
 	@Path("listDir")
-	@POST
+	@GET
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response listDir(String dir, @CookieParam("auth_token") Cookie cookie) {
+	public Response listDir(@QueryParam("dir") String dir, @CookieParam("auth_token") Cookie cookie) {
 		if (cookie == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
@@ -232,7 +232,9 @@ public class MyJerseyPage {
 		} catch (PathNotFoundException e) {
 			return Response.status(400).entity("The dir does not exist.").build();
 		}
-		return Response.ok(arr).build();
+		JSONObject ret = new JSONObject();
+		ret.put("list", arr);
+		return Response.ok(ret.toString()).build();
 	}
 
 	@Path("upload")
@@ -341,7 +343,7 @@ public class MyJerseyPage {
 		} catch (InpherRuntimeException e) {
 			return Response.status(400).entity("An error occured. Please check: " + e.getMessage()).build();
 		}
-		return Response.ok("resource deleted").build();
+		return Response.ok("resource moved").build();
 	}
 
 	@Path("search")
@@ -368,7 +370,7 @@ public class MyJerseyPage {
 		return Response.ok(ret.toString()).build();
 	}
 
-	@Path("search")
+	@Path("searchPaged")
 	@GET
 	public Response search(@QueryParam("keywords") String keywords, @QueryParam("page") int page,
 			@QueryParam("numRes") int numRes, @CookieParam("auth_token") Cookie cookie) {
@@ -404,8 +406,8 @@ public class MyJerseyPage {
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		boolean exists = sfs.isFile(FrontendPath.parse(path));
-		return Response.ok(exists).build();
+		Boolean isFile = sfs.isFile(FrontendPath.parse(path));
+		return Response.ok(isFile.toString()).build();
 	}
 
 	@Path("isDirectory")
@@ -419,8 +421,8 @@ public class MyJerseyPage {
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		boolean exists = sfs.isDirectory(FrontendPath.parse(path));
-		return Response.ok(exists).build();
+		Boolean isDirectory = sfs.isDirectory(FrontendPath.parse(path));
+		return Response.ok(isDirectory.toString()).build();
 	}
 
 	@Path("exists")
@@ -434,12 +436,13 @@ public class MyJerseyPage {
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		boolean exists = sfs.exists(FrontendPath.parse(path));
-		return Response.ok(exists).build();
+		Boolean exists = sfs.exists(FrontendPath.parse(path));
+		return Response.ok(exists.toString()).build();
 	}
 
 	@Path("listGroups")
 	@GET
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response listGroups(@CookieParam("auth_token") Cookie cookie) {
 		if (cookie == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -495,8 +498,8 @@ public class MyJerseyPage {
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		boolean isMember = sfs.isMember(groupName, userName);
-		return Response.ok(isMember).build();
+		Boolean isMember = sfs.isMember(groupName, userName);
+		return Response.ok(isMember.toString()).build();
 	}
 
 	@Path("owner")
