@@ -3,10 +3,10 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>inpher</groupId>
-	<artifactId>rest.service</artifactId>
+	<artifactId>ultraRest</artifactId>
 	<packaging>war</packaging>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>rest.service Maven Webapp</name>
+	<name>ultraRest Maven Webapp</name>
 	<url>http://maven.apache.org</url>
 
 	<repositories>
@@ -64,32 +64,64 @@
 			<version>3.8.1</version>
 			<scope>test</scope>
 		</dependency>
+
 		<dependency>
-			<groupId>com.sun.jersey</groupId>
+			<groupId>org.glassfish.jersey.core</groupId>
 			<artifactId>jersey-server</artifactId>
-			<version>1.19.1</version>
+			<version>2.23</version>
 		</dependency>
 		<dependency>
-			<groupId>com.sun.jersey</groupId>
-			<artifactId>jersey-servlet</artifactId>
-			<version>1.19.1</version>
+			<groupId>org.glassfish.jersey.containers</groupId>
+			<artifactId>jersey-container-servlet-core</artifactId>
+			<version>2.23</version>
 		</dependency>
+		<!-- http://mvnrepository.com/artifact/org.glassfish.jersey.media/jersey-media-multipart -->
+		<dependency>
+			<groupId>org.glassfish.jersey.media</groupId>
+			<artifactId>jersey-media-multipart</artifactId>
+			<version>2.23</version>
+		</dependency>
+		<!-- http://mvnrepository.com/artifact/org.glassfish.jersey.media/jersey-media-json-jackson -->
+		<dependency>
+			<groupId>org.glassfish.jersey.media</groupId>
+			<artifactId>jersey-media-json-jackson</artifactId>
+			<version>2.23</version>
+		</dependency>
+		<!-- http://mvnrepository.com/artifact/javax.ws.rs/javax.ws.rs-api -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>javax.ws.rs</groupId> -->
+<!-- 			<artifactId>javax.ws.rs-api</artifactId> -->
+<!-- 			<version>2.0-m08</version> -->
+<!-- 		</dependency> -->
+
+
+
+		<!-- <dependency> -->
+		<!-- <groupId>com.sun.jersey</groupId> -->
+		<!-- <artifactId>jersey-server</artifactId> -->
+		<!-- <version>1.19.1</version> -->
+		<!-- </dependency> -->
+		<!-- <dependency> -->
+		<!-- <groupId>com.sun.jersey</groupId> -->
+		<!-- <artifactId>jersey-servlet</artifactId> -->
+		<!-- <version>1.19.1</version> -->
+		<!-- </dependency> -->
 		<!-- http://mvnrepository.com/artifact/org.apache.tomcat/tomcat-servlet-api -->
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-servlet-api</artifactId>
 			<version>8.0.35</version>
 		</dependency>
-		<dependency>
-			<groupId>com.sun.jersey</groupId>
-			<artifactId>jersey-json</artifactId>
-			<version>1.19.1</version>
-		</dependency>
-		<dependency>
-			<groupId>com.sun.jersey.contribs</groupId>
-			<artifactId>jersey-multipart</artifactId>
-			<version>1.19.1</version>
-		</dependency>
+		<!-- <dependency> -->
+		<!-- <groupId>com.sun.jersey</groupId> -->
+		<!-- <artifactId>jersey-json</artifactId> -->
+		<!-- <version>1.19.1</version> -->
+		<!-- </dependency> -->
+		<!-- <dependency> -->
+		<!-- <groupId>com.sun.jersey.contribs</groupId> -->
+		<!-- <artifactId>jersey-multipart</artifactId> -->
+		<!-- <version>1.19.1</version> -->
+		<!-- </dependency> -->
 		<dependency>
 			<groupId>org.inpher</groupId>
 			<artifactId>clientapi</artifactId>
@@ -101,10 +133,15 @@
 			<version>1.2</version>
 			<scope>runtime</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.cxf</groupId>
+			<artifactId>cxf-bundle-jaxrs</artifactId>
+			<version>2.7.7</version>
+		</dependency>
 	</dependencies>
 
 	<build>
-		<finalName>rest.service</finalName>
+		<finalName>ultraRest</finalName>
 		<plugins>
 			<plugin>
 				<groupId>com.webcohesion.enunciate</groupId>

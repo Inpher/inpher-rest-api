@@ -28,6 +28,8 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.apache.commons.io.FileUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.inpher.clientapi.FrontendPath;
 import org.inpher.clientapi.InpherClient;
 import org.inpher.clientapi.InpherUser;
@@ -52,8 +54,6 @@ import org.inpher.clientapi.exceptions.PathNotOwnedByUserException;
 import org.json.JSONObject;
 import org.json.simple.JSONArray;
 
-import com.sun.jersey.core.header.FormDataContentDisposition;
-import com.sun.jersey.multipart.FormDataParam;
 
 @Path("/")
 public class UltraService {
@@ -65,7 +65,8 @@ public class UltraService {
 		Security.addProvider(new BouncyCastleProvider());
 		sfss = new ConcurrentHashMap<String, SearchableFileSystem>();
 		try {
-			inpherClient = InpherClient.getClient();//InpherClient.getClient("D:\\workspace\\rest.service\\src\\config.properties");
+			// inpherClient = InpherClient.getClient();
+			inpherClient = InpherClient.getClient("D:\\workspace\\ultraRest\\src\\config.properties");
 		} catch (InpherException e) {
 			e.printStackTrace();
 		}
@@ -74,7 +75,7 @@ public class UltraService {
 	@GET
 	@Produces(MediaType.TEXT_HTML)
 	public String sayHtmlHello() {
-		return "Hello from Ultra " + Paths.get(".").toAbsolutePath().normalize().toString();
+		return "Hello from _ultra rest API";
 	}
 
 	@Path("register")
