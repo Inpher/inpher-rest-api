@@ -3,10 +3,13 @@ package rest.service;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Paths;
 import java.security.Security;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,8 +54,6 @@ import org.inpher.clientapi.exceptions.InpherException;
 import org.inpher.clientapi.exceptions.InpherRuntimeException;
 import org.inpher.clientapi.exceptions.NonEmptyDirectoryException;
 import org.inpher.clientapi.exceptions.PathNotOwnedByUserException;
-import org.json.JSONObject;
-import org.json.simple.JSONArray;
 
 
 @Path("/")
@@ -62,21 +63,37 @@ public class UltraService {
 	private static String AUTH_TOKEN = "auth_token";
 
 	static {
-		Security.addProvider(new BouncyCastleProvider());
+		//Security.addProvider(new BouncyCastleProvider());
 		sfss = new ConcurrentHashMap<String, SearchableFileSystem>();
 		try {
-			// inpherClient = InpherClient.getClient();
-			inpherClient = InpherClient.getClient("D:\\workspace\\ultraRest\\src\\config.properties");
-		} catch (InpherException e) {
+			//inpherClient = InpherClient.getClient();
+		    URL config = UltraService.class.getResource("config.properties");
+		    if (config!=null)
+		        inpherClient = InpherClient.getClient(config.toExternalForm());
+		    else {
+		        System.err.println("No config properties found");
+		    }
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	@GET
-	@Produces(MediaType.TEXT_HTML)
-	public String sayHtmlHello() {
-		return "Hello from _ultra rest API";
-	}
+    @GET
+    @Produces(MediaType.TEXT_HTML)
+    public String sayHtmlHello() {
+        return "Hello from _ultra rest API";
+    }
+
+    @Path("testJSON")
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response sayJsonHello(User user) {
+        HashMap<String, Object> reps = new HashMap<>();
+        reps.put("user", user);
+        reps.put("message", "Hello from _ultra rest API");
+        return Response.ok(reps).build();
+    }
 
 	@Path("register")
 	@POST
@@ -222,7 +239,7 @@ public class UltraService {
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		JSONArray arr = new JSONArray();
+		ArrayList<Element> arr = new ArrayList<Element>();
 		try {
 			BackendIterator<Element> iterator = sfs.list(FrontendPath.parse(dir));
 			while (iterator.hasNext()) {
@@ -234,9 +251,9 @@ public class UltraService {
 		} catch (PathNotFoundException e) {
 			return Response.status(400).entity("The dir does not exist.").build();
 		}
-		JSONObject ret = new JSONObject();
+		HashMap<String, Object> ret = new HashMap<>();
 		ret.put("list", arr);
-		return Response.ok(ret.toString()).build();
+		return Response.ok(ret).build();
 	}
 
 	@Path("upload")
@@ -361,15 +378,15 @@ public class UltraService {
 		}
 		String[] words = keywords.split(" ");
 		SearchResponse results = sfs.search(Arrays.asList(words));
-		JSONArray arr = new JSONArray();
+		ArrayList<RankedSearchResult> arr = new ArrayList<>();
 		for (RankedSearchResult el : results.getAllRankedSearchResults()) {
 			arr.add(el);
 		}
 
-		JSONObject ret = new JSONObject();
+		HashMap<String, Object> ret = new HashMap<>();
 		ret.put("totalHits", results.getTotalHits());
 		ret.put("results", arr);
-		return Response.ok(ret.toString()).build();
+		return Response.ok(ret).build();
 	}
 
 	@Path("searchPaged")
@@ -386,12 +403,12 @@ public class UltraService {
 		}
 		String[] words = keywords.split(" ");
 		SearchResponse results = sfs.search(Arrays.asList(words), page, numRes);
-		JSONArray arr = new JSONArray();
+		ArrayList<RankedSearchResult> arr = new ArrayList<>();
 		for (RankedSearchResult el : results.getAllRankedSearchResults()) {
 			arr.add(el);
 		}
 
-		JSONObject ret = new JSONObject();
+		HashMap<String, Object> ret = new HashMap<>();
 		ret.put("totalHits", results.getTotalHits());
 		ret.put("results", arr);
 		return Response.ok(ret.toString()).build();
@@ -455,7 +472,7 @@ public class UltraService {
 			return Response.status(409).entity("Authentication failed").build();
 		}
 		Collection<String> groups = sfs.listGroups();
-		JSONArray arr = new JSONArray();
+		ArrayList<String> arr = new ArrayList<>();
 		for (String group : groups) {
 			arr.add(group);
 		}
@@ -481,7 +498,7 @@ public class UltraService {
 		} catch (InpherRuntimeException e) {
 			return Response.status(400).entity("An error occured. Please check: " + e.getMessage()).build();
 		}
-		JSONArray arr = new JSONArray();
+		ArrayList<String> arr = new ArrayList<>();
 		for (String group : groups) {
 			arr.add(group);
 		}
