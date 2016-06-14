@@ -67,9 +67,11 @@ public class UltraService {
 		sfss = new ConcurrentHashMap<String, SearchableFileSystem>();
 		try {
 			//inpherClient = InpherClient.getClient();
-		    URL config = UltraService.class.getResource("config.properties");
-		    if (config!=null)
-		        inpherClient = InpherClient.getClient(config.toExternalForm());
+		    URL config = UltraService.class.getResource("/config.properties");
+		    if (config!=null) {
+                System.err.println("Using "+config.getFile());
+		        inpherClient = InpherClient.getClient(config.getFile());
+		    }
 		    else {
 		        System.err.println("No config properties found");
 		    }
@@ -128,20 +130,29 @@ public class UltraService {
 		return Response.status(201).entity(result).cookie(cookie).build();
 	}
 
-	@Path("logout")
-	@POST
-	@Consumes(MediaType.APPLICATION_JSON)
-	public Response logout(@CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
-			return Response.status(409).entity("Authentication failed").build();
-		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
-		if (sfs == null) {
-			return Response.status(409).entity("Authentication failed").build();
-		}
-		inpherClient.logoutUser(sfs);
-		return Response.status(201).entity("logged out").build();
-	}
+    @Path("logout")
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response logout(@CookieParam("auth_token") Cookie cookie) {
+        if (cookie == null) {
+            return Response.status(409).entity("Authentication failed").build();
+        }
+        SearchableFileSystem sfs = sfss.get(cookie.getValue());
+        if (sfs == null) {
+            return Response.status(409).entity("Authentication failed").build();
+        }
+        inpherClient.logoutUser(sfs);
+        return Response.status(201).entity("logged out").build();
+    }
+
+    @Path("shutdown")
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response shutdown() {
+        inpherClient.close();
+        inpherClient=null;
+        return Response.status(201).entity("closed").build();
+    }
 
 	@Path("userCertificate")
 	@GET
@@ -206,8 +217,8 @@ public class UltraService {
 
 	@Path("mkdir")
 	@POST
-	@Consumes(MediaType.APPLICATION_JSON)
-	public Response mkdir(String dir, @CookieParam("auth_token") Cookie cookie) {
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	public Response mkdir(@FormParam("dir") String dir, @CookieParam("auth_token") Cookie cookie) {
 		if (cookie == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
@@ -229,7 +240,6 @@ public class UltraService {
 
 	@Path("listDir")
 	@GET
-	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response listDir(@QueryParam("dir") String dir, @CookieParam("auth_token") Cookie cookie) {
 		if (cookie == null) {
@@ -239,12 +249,12 @@ public class UltraService {
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		ArrayList<Element> arr = new ArrayList<Element>();
+		ArrayList<String> arr = new ArrayList<>();
 		try {
 			BackendIterator<Element> iterator = sfs.list(FrontendPath.parse(dir));
 			while (iterator.hasNext()) {
 				Element el = iterator.next();
-				arr.add(el);
+				arr.add(el.getFrontendPath().toURI());
 			}
 		} catch (InpherRuntimeException e) {
 			return Response.status(400).entity("An error occured. Please check: " + e.getMessage()).build();
@@ -367,6 +377,7 @@ public class UltraService {
 
 	@Path("search")
 	@GET
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response search(@QueryParam("keywords") String keywords, @CookieParam("auth_token") Cookie cookie) {
 		if (cookie == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -378,9 +389,12 @@ public class UltraService {
 		}
 		String[] words = keywords.split(" ");
 		SearchResponse results = sfs.search(Arrays.asList(words));
-		ArrayList<RankedSearchResult> arr = new ArrayList<>();
+		ArrayList<HashMap<String, Object>> arr = new ArrayList<>();
 		for (RankedSearchResult el : results.getAllRankedSearchResults()) {
-			arr.add(el);
+		    HashMap<String, Object> rankedResult=new HashMap<>();
+		    rankedResult.put("score", el.getScore());
+		    rankedResult.put("path", el.getPath().toString());		    
+		    arr.add(rankedResult);
 		}
 
 		HashMap<String, Object> ret = new HashMap<>();
