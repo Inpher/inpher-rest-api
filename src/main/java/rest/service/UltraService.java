@@ -15,22 +15,19 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.CookieParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.apache.commons.io.FileUtils;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.inpher.clientapi.FrontendPath;
@@ -60,7 +57,7 @@ import org.inpher.clientapi.exceptions.PathNotOwnedByUserException;
 public class UltraService {
 	private static InpherClient inpherClient;
 	private static Map<String, SearchableFileSystem> sfss;
-	private static String AUTH_TOKEN = "auth_token";
+	//private static String AUTH_TOKEN = "auth_token";
 
 	static {
 		//Security.addProvider(new BouncyCastleProvider());
@@ -127,50 +124,48 @@ public class UltraService {
 		return Response.ok().build();
 	}
 
+	private Response privLogin(String username, String password) {
+        SearchableFileSystem sfs;
+        try {
+            sfs = inpherClient.loginUser(new InpherUser(username, password));
+        } catch (AuthenticationException e) {
+            return Response.status(409).entity("Authentication failed").build();
+        }
+
+        //String result = "Person logged in successfully : " + username;
+        String token = UUID.randomUUID().toString();
+        //NewCookie authToken = new NewCookie(AUTH_TOKEN, token);
+        sfss.put(token, sfs);
+        HashMap<String, Object> reps = new HashMap<>();
+        reps.put("auth_token", token);
+        reps.put("username", username);
+        return Response.status(201).entity(reps).build();	    
+	}
+	
 	@Path("login")
 	@POST
-	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.APPLICATION_JSON)
 	public Response login(@FormParam("username") String username,@FormParam("password") String password) {
-		SearchableFileSystem sfs;
-		try {
-			sfs = inpherClient.loginUser(new InpherUser(username, password));
-		} catch (AuthenticationException e) {
-			return Response.status(409).entity("Authentication failed").build();
-		}
-
-		String result = "Person logged in successfully : " + username;
-		String token = UUID.randomUUID().toString();
-		NewCookie cookie = new NewCookie(AUTH_TOKEN, token);
-		sfss.put(token, sfs);
-		return Response.status(201).entity(result).cookie(cookie).build();
+		return privLogin(username, password);
 	}
 	
 	@Path("login")
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
 	public Response login(User user) {
-		SearchableFileSystem sfs;
-		try {
-			sfs = inpherClient.loginUser(new InpherUser(user.getName(), user.getPassword()));
-		} catch (AuthenticationException e) {
-			return Response.status(409).entity("Authentication failed").build();
-		}
-
-		String result = "Person logged in successfully : " + user.getName();
-		String token = UUID.randomUUID().toString();
-		NewCookie cookie = new NewCookie(AUTH_TOKEN, token);
-		sfss.put(token, sfs);
-		return Response.status(201).entity(result).cookie(cookie).build();
-	}
-
+	    return privLogin(user.getName(), user.getPassword());
+    }
+	
     @Path("logout")
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response logout(@CookieParam("auth_token") Cookie cookie) {
-        if (cookie == null) {
+    public Response logout(@HeaderParam("auth_token") String authToken) {
+        if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(cookie.getValue());
+        SearchableFileSystem sfs = sfss.get(authToken);
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
@@ -189,11 +184,11 @@ public class UltraService {
 
 	@Path("userCertificate")
 	@GET
-	public Response userCertificate(@QueryParam("username") String username, @CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+	public Response userCertificate(@QueryParam("username") String username, @HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
@@ -206,11 +201,11 @@ public class UltraService {
 	// public Response submitGroupCertificate(@FormParam("cert") String
 	// certificate,
 	// @FormParam("groupName") String groupName, @CookieParam("auth_token")
-	// Cookie cookie) {
-	// if (cookie == null) {
+	// Cookie authToken) {
+	// if (authToken == null) {
 	// return Response.status(409).entity("Authentication failed").build();
 	// }
-	// SearchableFileSystem sfs = sfss.get(cookie.getValue());
+	// SearchableFileSystem sfs = sfss.get(authToken);
 	// if (sfs == null) {
 	// return Response.status(409).entity("Authentication failed").build();
 	// }
@@ -221,11 +216,11 @@ public class UltraService {
 	@Path("doesSharingGroupExists")
 	@GET
 	public Response doesSharingGroupExists(@QueryParam("groupName") String groupName,
-			@CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+			@HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
@@ -236,11 +231,11 @@ public class UltraService {
 	@Path("createSharingGroup")
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response createSharingGroup(GroupRequest groupRequest, @CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+	public Response createSharingGroup(GroupRequest groupRequest, @HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
@@ -251,11 +246,11 @@ public class UltraService {
 	@Path("mkdir")
 	@POST
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response mkdir(@FormParam("dir") String dir, @CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+	public Response mkdir(@FormParam("dir") String dir, @HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
@@ -274,11 +269,11 @@ public class UltraService {
 	@Path("listDir")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response listDir(@QueryParam("dir") String dir, @CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+	public Response listDir(@QueryParam("dir") String dir, @HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
@@ -304,11 +299,11 @@ public class UltraService {
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	public Response uploadFile(@FormDataParam("content") final InputStream content,
 			@FormDataParam("content") FormDataContentDisposition contentDispositionHeader,
-			@FormDataParam("name") String name, @CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+			@FormDataParam("name") String name, @HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -332,11 +327,11 @@ public class UltraService {
 	@Path("download")
 	@GET
 	@Produces("text/plain")
-	public Response downloadFile(@QueryParam("fileName") String fileName, @CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+	public Response downloadFile(@QueryParam("fileName") String fileName, @HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -360,11 +355,11 @@ public class UltraService {
 	@Path("delete")
 	@DELETE
 	public Response delete(@QueryParam("path") String path, @QueryParam("recursive") boolean recursive,
-			@CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+			@HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -387,11 +382,11 @@ public class UltraService {
 	@Path("move")
 	@GET
 	public Response move(@QueryParam("oldPath") String oldPath, @QueryParam("newPath") String newPath,
-			@CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+			@HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -411,11 +406,11 @@ public class UltraService {
 	@Path("search")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response search(@QueryParam("keywords") String keywords, @CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+	public Response search(@QueryParam("keywords") String keywords, @HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -439,11 +434,11 @@ public class UltraService {
 	@Path("searchPaged")
 	@GET
 	public Response search(@QueryParam("keywords") String keywords, @QueryParam("page") int page,
-			@QueryParam("numRes") int numRes, @CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+			@QueryParam("numRes") int numRes, @HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -463,11 +458,11 @@ public class UltraService {
 
 	@Path("isFile")
 	@GET
-	public Response isFile(@QueryParam("path") String path, @CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+	public Response isFile(@QueryParam("path") String path, @HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -478,11 +473,11 @@ public class UltraService {
 
 	@Path("isDirectory")
 	@GET
-	public Response isDirectory(@QueryParam("path") String path, @CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+	public Response isDirectory(@QueryParam("path") String path, @HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -493,11 +488,11 @@ public class UltraService {
 
 	@Path("exists")
 	@GET
-	public Response exists(@QueryParam("path") String path, @CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+	public Response exists(@QueryParam("path") String path, @HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -509,11 +504,11 @@ public class UltraService {
 	@Path("listGroups")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response listGroups(@CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+	public Response listGroups(@HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -528,11 +523,11 @@ public class UltraService {
 
 	@Path("listAuthorizedGroups")
 	@GET
-	public Response listAuthorizedGroups(@QueryParam("path") String path, @CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+	public Response listAuthorizedGroups(@QueryParam("path") String path, @HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -555,11 +550,11 @@ public class UltraService {
 	@Path("isMember")
 	@GET
 	public Response isMember(@QueryParam("groupName") String groupName, @QueryParam("userName") String userName,
-			@CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+			@HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -570,11 +565,11 @@ public class UltraService {
 
 	@Path("owner")
 	@GET
-	public Response owner(@QueryParam("fileName") String fileName, @CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+	public Response owner(@QueryParam("fileName") String fileName, @HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -593,11 +588,11 @@ public class UltraService {
 	@Path("addUser")
 	@GET
 	public Response addUser(@QueryParam("groupName") String groupName, @QueryParam("userName") String userName,
-			@CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+			@HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -613,11 +608,11 @@ public class UltraService {
 	@Path("revokeUser")
 	@GET
 	public Response revokeUser(@QueryParam("groupName") String groupName, @QueryParam("userName") String userName,
-			@CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+			@HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -629,11 +624,11 @@ public class UltraService {
 	@Path("shareElement")
 	@GET
 	public Response shareElement(@QueryParam("groupName") String groupName, @QueryParam("filePath") String filePath,
-			@QueryParam("shareName") String shareName, @CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+			@QueryParam("shareName") String shareName, @HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -655,11 +650,11 @@ public class UltraService {
 	@Path("unshareElement")
 	@GET
 	public Response unshareElement(@QueryParam("groupName") String groupName, @QueryParam("shareName") String shareName,
-			@CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+			@HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -681,11 +676,11 @@ public class UltraService {
 	@Path("refreshGroupKeyring")
 	@GET
 	public Response refreshGroupKeyring(@QueryParam("groupName") String groupName,
-			@CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+			@HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
@@ -697,11 +692,11 @@ public class UltraService {
 	@Path("refreshUserKeyring")
 	@POST
 	public Response refreshUserKeyring(@FormParam("password") String password,
-			@CookieParam("auth_token") Cookie cookie) {
-		if (cookie == null) {
+			@HeaderParam("auth_token") String authToken) {
+		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
-		SearchableFileSystem sfs = sfss.get(cookie.getValue());
+		SearchableFileSystem sfs = sfss.get(authToken);
 
 		if (sfs == null) {
 			return Response.status(409).entity("Authentication failed").build();
