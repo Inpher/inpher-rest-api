@@ -111,7 +111,40 @@ public class UltraService {
 		}
 		return Response.ok().build();
 	}
+	
+	@Path("register")
+	@POST
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	public Response register(@FormParam("username") String username,@FormParam("password") String password) {
+		if (username == null || password == null) {
+			return Response.status(400).entity("password and name should not be empty").build();
+		}
+		try {
+			inpherClient.registerUser(new InpherUser(username, password));
+		} catch (ExistingUserException e) {
+			return Response.status(409).entity("user already exists").build();
+		}
+		return Response.ok().build();
+	}
 
+	@Path("login")
+	@POST
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	public Response login(@FormParam("username") String username,@FormParam("password") String password) {
+		SearchableFileSystem sfs;
+		try {
+			sfs = inpherClient.loginUser(new InpherUser(username, password));
+		} catch (AuthenticationException e) {
+			return Response.status(409).entity("Authentication failed").build();
+		}
+
+		String result = "Person logged in successfully : " + username;
+		String token = UUID.randomUUID().toString();
+		NewCookie cookie = new NewCookie(AUTH_TOKEN, token);
+		sfss.put(token, sfs);
+		return Response.status(201).entity(result).cookie(cookie).build();
+	}
+	
 	@Path("login")
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -149,7 +182,7 @@ public class UltraService {
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response shutdown() {
-        inpherClient.close();
+//        inpherClient.close();
         inpherClient=null;
         return Response.status(201).entity("closed").build();
     }
