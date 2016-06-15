@@ -184,6 +184,7 @@ public class UltraService {
 
 	@Path("userCertificate")
 	@GET
+	@Produces(MediaType.TEXT_PLAIN)
 	public Response userCertificate(@QueryParam("username") String username, @HeaderParam("auth_token") String authToken) {
 		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
