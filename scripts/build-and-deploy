@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TOMCAT_FOLDER=$HOME/apache-tomcat-8.0.35
+TOMCAT_FOLDER=$HOME/apache-tomcat-8.0.36
 
 mvn clean package
 
@@ -11,6 +11,6 @@ ps -aefl | grep tomcat | grep java | awk '{print "kill -9 "$4}' | sh
 sleep 1
 rm -rf $TOMCAT_FOLDER/webapps/ultraRest*
 
-cp ../target/ultraRest.war $TOMCAT_FOLDER/webapps/
+cp target/ultraRest.war $TOMCAT_FOLDER/webapps/
 $TOMCAT_FOLDER/bin/startup.sh
 

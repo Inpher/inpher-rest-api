@@ -178,10 +178,6 @@
 		    <webResources>
 			<resource>
 			    <directory>target/docs/</directory>
-			    <includes>
-				<include>**/*</include>
-			    </includes>
-			    <targetPath>.</targetPath>
 			</resource>
 		    </webResources>
 		</configuration>
