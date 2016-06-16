@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 
 @Path("/")
@@ -258,13 +259,15 @@ public class UltraService {
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        ArrayList<Map<String, String>> arr = new ArrayList<>();
+        ArrayList<Map<String, Object>> arr = new ArrayList<>();
         try {
             BackendIterator<Element> iterator = sfs.list(FrontendPath.parse(dir));
             while (iterator.hasNext()) {
                 Element el = iterator.next();
-                Map<String, String> elJS = elementToJSObject(el);
-                arr.add(elementToJSObject(el));
+                Map<String, Object> elJS = elementToJSObject(el);
+                elJS.put("groups", sfs.getAuthorizedGroups(el.getFrontendPath()).stream()
+                        .collect(Collectors.toList()));
+                arr.add(elJS);
             }
         } catch (InpherRuntimeException e) {
             return Response.status(400).entity("An error occured. Please check: " + e.getMessage())
@@ -277,8 +280,8 @@ public class UltraService {
         return Response.ok(ret).build();
     }
 
-    private Map<String, String> elementToJSObject(Element el) {
-        Map<String, String> elMap = new HashMap<>();
+    private Map<String, Object> elementToJSObject(Element el) {
+        Map<String, Object> elMap = new HashMap<>();
         elMap.put("path", el.getFrontendURI());
         elMap.put("type", el.getType().name());
         elMap.put("size", "" + el.getSize());
