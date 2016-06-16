@@ -1,0 +1,16 @@
+#!/bin/sh
+
+TOMCAT_FOLDER=$HOME/apache-tomcat-8.0.35
+
+mvn clean package
+
+$TOMCAT_FOLDER/bin/shutdown.sh
+sleep 1
+ps -aefl | grep tomcat | grep java | awk '{print "kill "$4}' | sh
+ps -aefl | grep tomcat | grep java | awk '{print "kill -9 "$4}' | sh
+sleep 1
+rm -rf $TOMCAT_FOLDER/webapps/ultraRest*
+
+cp ../target/ultraRest.war $TOMCAT_FOLDER/webapps/
+$TOMCAT_FOLDER/bin/startup.sh
+
