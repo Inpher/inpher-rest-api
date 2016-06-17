@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 public class UltraService {
     private static InpherClient inpherClient;
     private static Map<String, String> tokenToUserNameMap;
+    private static Map<String, Set<String>> userNameToTokensMap;
     private static Map<String, SearchableFileSystem> userNameToSFSMap;
     private static Map<String, SaltAndHash> userNameToPasswordMap;
     private static SecureRandom random;
@@ -44,6 +45,7 @@ public class UltraService {
         userNameToSFSMap = new ConcurrentHashMap<>();
         tokenToUserNameMap = new ConcurrentHashMap<>();
         userNameToPasswordMap = new ConcurrentHashMap<>();
+        userNameToTokensMap = new ConcurrentHashMap<>();
         random = new SecureRandom();
         try {
             //inpherClient = InpherClient.getClient();
@@ -107,7 +109,7 @@ public class UltraService {
         return Response.ok().build();
     }
 
-    private Response privLogin(String username, String password) {
+    private synchronized Response privLogin(String username, String password) {
         SearchableFileSystem sfs;
         try {
             if (userNameToPasswordMap.containsKey(username)) {//already logged in
@@ -129,6 +131,7 @@ public class UltraService {
         String token = UUID.randomUUID().toString();
         //NewCookie authToken = new NewCookie(AUTH_TOKEN, token);
         tokenToUserNameMap.put(token, username);
+        MultiMaps.multimapInsert(userNameToTokensMap, username, token);
         HashMap<String, Object> reps = new HashMap<>();
         reps.put("auth_token", token);
         reps.put("username", username);
@@ -155,7 +158,7 @@ public class UltraService {
     @Path("logout")
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response logout(@HeaderParam("auth_token") String authToken) {
+    public synchronized Response logout(@HeaderParam("auth_token") String authToken) {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
@@ -163,7 +166,14 @@ public class UltraService {
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        inpherClient.logoutUser(sfs);
+        String username = tokenToUserNameMap.get(authToken);
+        tokenToUserNameMap.remove(authToken);
+        MultiMaps.multimapRemove(userNameToTokensMap, username, authToken);
+        //if all tokens are logged out, we can safely delete the sfs
+        if (MultiMaps.multimapIsKeyEmpty(userNameToTokensMap, username)) {
+            userNameToSFSMap.remove(username);
+            inpherClient.logoutUser(sfs);
+        }
         return Response.status(201).entity("logged out").build();
     }
 
@@ -171,7 +181,7 @@ public class UltraService {
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response shutdown() {
-        //        inpherClient.close();
+        //TODO       inpherClient.close();
         inpherClient = null;
         return Response.status(201).entity("closed").build();
     }
