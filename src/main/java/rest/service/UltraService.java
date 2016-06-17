@@ -412,9 +412,10 @@ public class UltraService {
     }
 
     @Path("move")
-    @GET
-    public Response move(@QueryParam("oldPath") String oldPath,
-            @QueryParam("newPath") String newPath, @HeaderParam("auth_token") String authToken) {
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response move(@FormParam("oldPath") String oldPath,
+            @FormParam("newPath") String newPath, @HeaderParam("auth_token") String authToken) {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
@@ -437,9 +438,10 @@ public class UltraService {
     }
 
     @Path("search")
-    @GET
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response search(@QueryParam("keywords") String keywords,
+    public Response search(@FormParam("query") String query,
             @HeaderParam("auth_token") String authToken) {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
@@ -449,8 +451,7 @@ public class UltraService {
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        String[] words = keywords.split(" ");
-        SearchResponse results = sfs.search(Arrays.asList(words));
+        SearchResponse results = sfs.search(query);
         ArrayList<HashMap<String, Object>> arr = new ArrayList<>();
         for (RankedSearchResult el : results.getAllRankedSearchResults()) {
             HashMap<String, Object> rankedResult = new HashMap<>();
@@ -466,9 +467,11 @@ public class UltraService {
     }
 
     @Path("searchPaged")
-    @GET
-    public Response search(@QueryParam("keywords") String keywords, @QueryParam("page") int page,
-            @QueryParam("numRes") int numRes, @HeaderParam("auth_token") String authToken) {
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response search(@FormParam("query") String query, @FormParam("page") int page,
+            @FormParam("numRes") int numRes, @HeaderParam("auth_token") String authToken) {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
@@ -477,8 +480,7 @@ public class UltraService {
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        String[] words = keywords.split(" ");
-        SearchResponse results = sfs.search(Arrays.asList(words), page, numRes);
+        SearchResponse results = sfs.search(query, page, numRes);
         ArrayList<RankedSearchResult> arr = new ArrayList<>();
         for (RankedSearchResult el : results.getAllRankedSearchResults()) {
             arr.add(el);
@@ -627,9 +629,10 @@ public class UltraService {
     }
 
     @Path("addUser")
-    @GET
-    public Response addUser(@QueryParam("groupName") String groupName,
-            @QueryParam("userName") String userName, @HeaderParam("auth_token") String authToken) {
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response addUser(@FormParam("groupName") String groupName,
+            @FormParam("userName") String userName, @HeaderParam("auth_token") String authToken) {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
@@ -647,9 +650,10 @@ public class UltraService {
     }
 
     @Path("revokeUser")
-    @GET
-    public Response revokeUser(@QueryParam("groupName") String groupName,
-            @QueryParam("userName") String userName, @HeaderParam("auth_token") String authToken) {
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response revokeUser(@FormParam("groupName") String groupName,
+            @FormParam("userName") String userName, @HeaderParam("auth_token") String authToken) {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
@@ -663,9 +667,10 @@ public class UltraService {
     }
 
     @Path("shareElement")
-    @GET
-    public Response shareElement(@QueryParam("groupName") String groupName,
-            @QueryParam("filePath") String filePath, @QueryParam("shareName") String shareName,
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response shareElement(@FormParam("groupName") String groupName,
+            @FormParam("filePath") String filePath, @FormParam("shareName") String shareName,
             @HeaderParam("auth_token") String authToken) {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
@@ -691,9 +696,10 @@ public class UltraService {
     }
 
     @Path("unshareElement")
-    @GET
-    public Response unshareElement(@QueryParam("groupName") String groupName,
-            @QueryParam("shareName") String shareName,
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response unshareElement(@FormParam("groupName") String groupName,
+            @FormParam("shareName") String shareName,
             @HeaderParam("auth_token") String authToken) {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
@@ -719,8 +725,9 @@ public class UltraService {
     }
 
     @Path("refreshGroupKeyring")
-    @GET
-    public Response refreshGroupKeyring(@QueryParam("groupName") String groupName,
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response refreshGroupKeyring(@FormParam("groupName") String groupName,
             @HeaderParam("auth_token") String authToken) {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
