@@ -1,6 +1,7 @@
 package rest.service;
 
 import org.apache.commons.io.FileUtils;
+import org.bouncycastle.crypto.digests.SHA256Digest;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.inpher.clientapi.*;
@@ -22,6 +23,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -30,12 +33,18 @@ import java.util.stream.Collectors;
 @Path("/")
 public class UltraService {
     private static InpherClient inpherClient;
-    private static Map<String, SearchableFileSystem> sfss;
+    private static Map<String, String> tokenToUserNameMap;
+    private static Map<String, SearchableFileSystem> userNameToSFSMap;
+    private static Map<String, SaltAndHash> userNameToPasswordMap;
+    private static SecureRandom random;
     //private static String AUTH_TOKEN = "auth_token";
 
     static {
         //Security.addProvider(new BouncyCastleProvider());
-        sfss = new ConcurrentHashMap<>();
+        userNameToSFSMap = new ConcurrentHashMap<>();
+        tokenToUserNameMap = new ConcurrentHashMap<>();
+        userNameToPasswordMap = new ConcurrentHashMap<>();
+        random = new SecureRandom();
         try {
             //inpherClient = InpherClient.getClient();
             URL config = UltraService.class.getResource("/config.properties");
@@ -101,7 +110,17 @@ public class UltraService {
     private Response privLogin(String username, String password) {
         SearchableFileSystem sfs;
         try {
-            sfs = inpherClient.loginUser(new InpherUser(username, password));
+            if (userNameToPasswordMap.containsKey(username)) {//already logged in
+                if (!verifyHash(userNameToPasswordMap.get(username), password)) //password incorrect
+                    throw new AuthenticationException(username);
+                else {
+                    sfs = userNameToSFSMap.get(username);
+                }
+            } else { //First login: do the proper login
+                sfs = inpherClient.loginUser(new InpherUser(username, password));
+                userNameToSFSMap.put(username, sfs);
+                userNameToPasswordMap.put(username, createHash(password));
+            }
         } catch (AuthenticationException e) {
             return Response.status(409).entity("Authentication failed").build();
         }
@@ -109,7 +128,7 @@ public class UltraService {
         //String result = "Person logged in successfully : " + username;
         String token = UUID.randomUUID().toString();
         //NewCookie authToken = new NewCookie(AUTH_TOKEN, token);
-        sfss.put(token, sfs);
+        tokenToUserNameMap.put(token, username);
         HashMap<String, Object> reps = new HashMap<>();
         reps.put("auth_token", token);
         reps.put("username", username);
@@ -140,7 +159,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
@@ -165,7 +184,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
@@ -197,7 +216,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
@@ -213,7 +232,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
@@ -230,7 +249,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
@@ -255,7 +274,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
@@ -297,7 +316,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
 
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
@@ -328,7 +347,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
 
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
@@ -359,7 +378,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
 
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
@@ -389,7 +408,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
 
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
@@ -415,7 +434,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
 
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
@@ -443,7 +462,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
 
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
@@ -468,7 +487,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
 
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
@@ -484,7 +503,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
 
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
@@ -500,7 +519,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
 
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
@@ -516,7 +535,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
 
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
@@ -536,7 +555,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
 
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
@@ -564,7 +583,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
 
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
@@ -580,7 +599,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
 
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
@@ -604,7 +623,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
 
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
@@ -624,7 +643,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
 
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
@@ -641,7 +660,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
 
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
@@ -669,7 +688,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
 
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
@@ -696,7 +715,7 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
 
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
@@ -712,12 +731,76 @@ public class UltraService {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        SearchableFileSystem sfs = sfss.get(authToken);
+        SearchableFileSystem sfs = sfsFromToken(authToken);
 
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
         sfs.refreshUserKeyring(password);
         return Response.ok("user keyring is refreshed").build();
+    }
+
+    private static SaltAndHash createHash(String password) {
+        byte[] salt = new byte[16];
+        random.nextBytes(salt);
+        byte[] out = hashSaltAndPassword(salt, password);
+        return new SaltAndHash(Base64.getEncoder().encodeToString(salt),
+                Base64.getEncoder().encodeToString(out));
+    }
+
+    private static boolean verifyHash(SaltAndHash saltAndHash, String password) {
+        byte[] salt = Base64.getDecoder().decode(saltAndHash.salt);
+        byte[] hash = Base64.getDecoder().decode(saltAndHash.hash);
+        return (Arrays.equals(hash, hashSaltAndPassword(salt, password)));
+    }
+
+    private static byte[] hashSaltAndPassword(byte[] salt, String password) {
+        byte[] message = password.getBytes(StandardCharsets.UTF_8);
+        SHA256Digest digest = new SHA256Digest();
+        digest.update(salt, 0, salt.length);
+        digest.update(message, 0, message.length);
+        byte[] out = new byte[digest.getDigestSize()];
+        digest.doFinal(out, 0);
+        return out;
+    }
+
+    private static SearchableFileSystem sfsFromToken(String token) {
+        String username;
+        if (token != null && (username = tokenToUserNameMap.get(token)) != null)
+            return userNameToSFSMap.get(username);
+        else
+            return null;
+    }
+
+    static class SaltAndHash {
+        public final String salt;
+        public final String hash;
+
+        public SaltAndHash(String salt, String hash) {
+            this.salt = salt;
+            this.hash = hash;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
+
+            SaltAndHash that = (SaltAndHash) o;
+
+            if (salt != null ? !salt.equals(that.salt) : that.salt != null)
+                return false;
+            return hash != null ? hash.equals(that.hash) : that.hash == null;
+
+        }
+
+        @Override
+        public int hashCode() {
+            int result = salt != null ? salt.hashCode() : 0;
+            result = 31 * result + (hash != null ? hash.hashCode() : 0);
+            return result;
+        }
     }
 }
