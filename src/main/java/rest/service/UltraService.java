@@ -267,7 +267,7 @@ public class UltraService {
             sfs.mkdir(FrontendPath.parse(dir));
         } catch (ParentNotFoundException e) {
             return Response.status(400).entity("The parent of the dir does not exist.").build();
-        } catch (InpherRuntimeException e) {
+        } catch (InpherRuntimeException |IllegalArgumentException e) {
             return Response.status(400).entity("An error occured. Please check: " + e.getMessage())
                     .build();
         }
@@ -342,7 +342,7 @@ public class UltraService {
             sfs.upload(file, FrontendPath.parse(name));
         } catch (ParentNotFoundException e) {
             return Response.status(400).entity("The parent of the dir does not exists.").build();
-        } catch (InpherRuntimeException e) {
+        } catch (InpherRuntimeException | IllegalArgumentException e) {
             return Response.status(400).entity("An error occured. Please check: " + e.getMessage())
                     .build();
         }
