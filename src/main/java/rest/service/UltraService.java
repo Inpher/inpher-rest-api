@@ -246,9 +246,13 @@ public class UltraService {
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        inpherClient
-                .createSharingGroup(sfs, groupRequest.getGroupName(), groupRequest.getUsernames());
-        return Response.status(201).entity("logged out").build();
+        try {
+            inpherClient.createSharingGroup(sfs, groupRequest.getGroupName(), groupRequest.getUsernames());
+        }
+        catch(IllegalArgumentException e){
+            return Response.status(409).entity("Illegal arguments: one user might not exist").build();
+        }
+        return Response.status(201).entity("Sharing group successfully created.").build();
     }
 
     @Path("mkdir")
