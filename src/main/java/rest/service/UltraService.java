@@ -437,6 +437,9 @@ public class UltraService {
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
+        if(query == null) {
+            return Response.status(409).entity("Empty query").build();
+        }
         SearchResponse results = sfs.search(query);
         ArrayList<HashMap<String, Object>> arr = new ArrayList<>();
         for (RankedSearchResult el : results.getAllRankedSearchResults()) {
