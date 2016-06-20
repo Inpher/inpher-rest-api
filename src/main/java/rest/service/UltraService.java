@@ -106,6 +106,9 @@ public class UltraService {
         } catch (ExistingUserException e) {
             return Response.status(409).entity("user already exists").build();
         }
+        catch (IllegalArgumentException e){
+            return Response.status(409).entity("Invalid user name. It should not be empty and can contain only alphanumerical characters, underscores, and dashes").build();
+        }
         return Response.ok().build();
     }
 
