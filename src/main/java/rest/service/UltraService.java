@@ -181,7 +181,7 @@ public class UltraService {
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response shutdown() {
-        //TODO       inpherClient.close();
+        inpherClient.close();
         inpherClient = null;
         return Response.status(201).entity("closed").build();
     }
@@ -202,22 +202,6 @@ public class UltraService {
         return Response.status(201).entity(cert.toString()).build();
     }
 
-    // @Path("submitGroupCertificate")
-    // @POST
-    // public Response submitGroupCertificate(@FormParam("cert") String
-    // certificate,
-    // @FormParam("groupName") String groupName, @CookieParam("auth_token")
-    // Cookie authToken) {
-    // if (authToken == null) {
-    // return Response.status(409).entity("Authentication failed").build();
-    // }
-    // SearchableFileSystem sfs = sfss.get(authToken);
-    // if (sfs == null) {
-    // return Response.status(409).entity("Authentication failed").build();
-    // }
-    // inpherClient.submitGroupCertificate(new Certificate(cert), groupName);
-    // return Response.status(201).entity("certificate submitted").build();
-    // }
 
     @Path("doesSharingGroupExists")
     @GET
@@ -247,10 +231,11 @@ public class UltraService {
             return Response.status(409).entity("Authentication failed").build();
         }
         try {
-            inpherClient.createSharingGroup(sfs, groupRequest.getGroupName(), groupRequest.getUsernames());
-        }
-        catch(IllegalArgumentException e){
-            return Response.status(409).entity("Illegal arguments: one user might not exist").build();
+            inpherClient.createSharingGroup(sfs, groupRequest.getGroupName(),
+                    groupRequest.getUsernames());
+        } catch (IllegalArgumentException e) {
+            return Response.status(409).entity("Illegal arguments: one user might not exist")
+                    .build();
         }
         return Response.status(201).entity("Sharing group successfully created.").build();
     }
@@ -271,8 +256,8 @@ public class UltraService {
             sfs.mkdir(FrontendPath.parse(dir));
         } catch (ParentNotFoundException e) {
             return Response.status(400).entity("The parent of the dir does not exist.").build();
-        } catch (InpherRuntimeException |IllegalArgumentException e) {
-            return Response.status(400).entity("An error occured. Please check: " + e.getMessage())
+        } catch (InpherRuntimeException | IllegalArgumentException e) {
+            return Response.status(400).entity("An error occurred. Please check: " + e.getMessage())
                     .build();
         }
 
@@ -303,7 +288,7 @@ public class UltraService {
                 arr.add(elJS);
             }
         } catch (InpherRuntimeException e) {
-            return Response.status(400).entity("An error occured. Please check: " + e.getMessage())
+            return Response.status(400).entity("An error occurred. Please check: " + e.getMessage())
                     .build();
         } catch (PathNotFoundException e) {
             return Response.status(400).entity("The dir does not exist.").build();
@@ -347,7 +332,7 @@ public class UltraService {
         } catch (ParentNotFoundException e) {
             return Response.status(400).entity("The parent of the dir does not exists.").build();
         } catch (InpherRuntimeException | IllegalArgumentException e) {
-            return Response.status(400).entity("An error occured. Please check: " + e.getMessage())
+            return Response.status(400).entity("An error occurred. Please check: " + e.getMessage())
                     .build();
         }
         return Response.ok("file uploaded").build();
@@ -375,7 +360,7 @@ public class UltraService {
         } catch (PathIsDirectoryException e) {
             return Response.status(400).entity("The path points to a directory").build();
         } catch (InpherRuntimeException e) {
-            return Response.status(400).entity("An error occured. Please check: " + e.getMessage())
+            return Response.status(400).entity("An error occurred. Please check: " + e.getMessage())
                     .build();
         }
         ResponseBuilder response = Response.ok((Object) file);
@@ -400,7 +385,7 @@ public class UltraService {
         try {
             sfs.delete(FrontendPath.parse(path), recursive);
         } catch (NonEmptyDirectoryException e) {
-            return Response.status(400).entity("The path points to a directory that is not emptry")
+            return Response.status(400).entity("The path points to a directory that is not empty")
                     .build();
         } catch (PathNotOwnedByUserException e) {
             return Response.status(400)
@@ -409,7 +394,7 @@ public class UltraService {
         } catch (PathNotFoundException e) {
             return Response.status(400).entity("The resource does not exist.").build();
         } catch (InpherRuntimeException e) {
-            return Response.status(400).entity("An error occured. Please check: " + e.getMessage())
+            return Response.status(400).entity("An error occurred. Please check: " + e.getMessage())
                     .build();
         }
         return Response.ok("resource deleted").build();
@@ -418,8 +403,8 @@ public class UltraService {
     @Path("move")
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response move(@FormParam("oldPath") String oldPath,
-            @FormParam("newPath") String newPath, @HeaderParam("auth_token") String authToken) {
+    public Response move(@FormParam("oldPath") String oldPath, @FormParam("newPath") String newPath,
+            @HeaderParam("auth_token") String authToken) {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
@@ -435,7 +420,7 @@ public class UltraService {
         } catch (PathAlreadyExistsException e) {
             return Response.status(400).entity("The new path is already in use.").build();
         } catch (InpherRuntimeException e) {
-            return Response.status(400).entity("An error occured. Please check: " + e.getMessage())
+            return Response.status(400).entity("An error occurred. Please check: " + e.getMessage())
                     .build();
         }
         return Response.ok("resource moved").build();
@@ -486,9 +471,7 @@ public class UltraService {
         }
         SearchResponse results = sfs.search(query, page, numRes);
         ArrayList<RankedSearchResult> arr = new ArrayList<>();
-        for (RankedSearchResult el : results.getAllRankedSearchResults()) {
-            arr.add(el);
-        }
+        arr.addAll(results.getAllRankedSearchResults());
 
         HashMap<String, Object> ret = new HashMap<>();
         ret.put("totalHits", results.getTotalHits());
@@ -582,7 +565,7 @@ public class UltraService {
         } catch (PathNotFoundException e) {
             return Response.status(400).entity("The resource does not exist.").build();
         } catch (InpherRuntimeException e) {
-            return Response.status(400).entity("An error occured. Please check: " + e.getMessage())
+            return Response.status(400).entity("An error occurred. Please check: " + e.getMessage())
                     .build();
         }
         ArrayList<String> arr = new ArrayList<>();
@@ -626,7 +609,7 @@ public class UltraService {
         } catch (PathNotFoundException e) {
             return Response.status(400).entity("The resource does not exist.").build();
         } catch (InpherRuntimeException e) {
-            return Response.status(400).entity("An error occured. Please check: " + e.getMessage())
+            return Response.status(400).entity("An error occurred. Please check: " + e.getMessage())
                     .build();
         }
         return Response.ok(owner).build();
@@ -689,11 +672,11 @@ public class UltraService {
         } catch (ElementAlreadySharedException e) {
             return Response.status(400).entity("The element is already shared.").build();
         } catch (PathNotOwnedByUserException e) {
-            return Response.status(400).entity("You can share only your own resources.").build();
+            return Response.status(400).entity("You can only share your own resources.").build();
         } catch (PathNotFoundException e) {
             return Response.status(400).entity("The resource does not exist.").build();
         } catch (InpherRuntimeException e) {
-            return Response.status(400).entity("An error occured. Please check: " + e.getMessage())
+            return Response.status(400).entity("An error occurred. Please check: " + e.getMessage())
                     .build();
         }
         return Response.ok("element shared").build();
@@ -703,8 +686,7 @@ public class UltraService {
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response unshareElement(@FormParam("groupName") String groupName,
-            @FormParam("shareName") String shareName,
-            @HeaderParam("auth_token") String authToken) {
+            @FormParam("shareName") String shareName, @HeaderParam("auth_token") String authToken) {
         if (authToken == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
@@ -722,7 +704,7 @@ public class UltraService {
         } catch (PathNotFoundException e) {
             return Response.status(400).entity("The resource does not exist.").build();
         } catch (InpherRuntimeException e) {
-            return Response.status(400).entity("An error occured. Please check: " + e.getMessage())
+            return Response.status(400).entity("An error occurred. Please check: " + e.getMessage())
                     .build();
         }
         return Response.ok("element unshared").build();
