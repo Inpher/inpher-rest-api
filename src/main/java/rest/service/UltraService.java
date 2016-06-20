@@ -102,6 +102,7 @@ public class UltraService {
             return Response.status(400).entity("password and name should not be empty").build();
         }
         try {
+            inpherClient.registerUser(new InpherUser(username, "123"));
             inpherClient.registerUser(new InpherUser(username, password));
         } catch (ExistingUserException e) {
             return Response.status(409).entity("user already exists").build();
@@ -115,9 +116,6 @@ public class UltraService {
             if (userNameToSFSMap.containsKey(username)) {//already logged in
                 if (!verifyHash(userNameToPasswordMap.get(username), password)) //password incorrect
                     throw new AuthenticationException(username);
-                else {
-                    sfs = userNameToSFSMap.get(username);
-                }
             } else { //First login: do the proper login
                 sfs = inpherClient.loginUser(new InpherUser(username, password));
                 userNameToSFSMap.put(username, sfs);
