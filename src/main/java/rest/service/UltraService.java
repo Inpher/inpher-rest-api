@@ -102,7 +102,6 @@ public class UltraService {
             return Response.status(400).entity("password and name should not be empty").build();
         }
         try {
-            inpherClient.registerUser(new InpherUser(username, "123"));
             inpherClient.registerUser(new InpherUser(username, password));
         } catch (ExistingUserException e) {
             return Response.status(409).entity("user already exists").build();
