@@ -112,7 +112,7 @@ public class UltraService {
     private synchronized Response privLogin(String username, String password) {
         SearchableFileSystem sfs;
         try {
-            if (userNameToPasswordMap.containsKey(username)) {//already logged in
+            if (userNameToSFSMap.containsKey(username)) {//already logged in
                 if (!verifyHash(userNameToPasswordMap.get(username), password)) //password incorrect
                     throw new AuthenticationException(username);
                 else {
