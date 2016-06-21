@@ -88,7 +88,7 @@ public class UltraService {
         try {
             inpherClient.registerUser(new InpherUser(user.getName(), user.getPassword()));
         } catch (ExistingUserException e) {
-            return Response.status(409).entity("user already exists").build();
+            return Response.status(400).entity("user already exists").build();
         }
         return Response.ok().build();
     }
@@ -104,15 +104,17 @@ public class UltraService {
         try {
             inpherClient.registerUser(new InpherUser(username, password));
         } catch (ExistingUserException e) {
-            return Response.status(409).entity("user already exists").build();
+            return Response.status(400).entity("user already exists").build();
         }
         catch (IllegalArgumentException e){
-            return Response.status(409).entity("Invalid user name. It should not be empty and can contain only alphanumerical characters, underscores, and dashes").build();
+            return Response.status(400).entity("Invalid user name. It should not be empty and can contain only alphanumerical characters, underscores, and dashes").build();
         }
         return Response.ok().build();
     }
 
     private synchronized Response privLogin(String username, String password) {
+        if(username == null || password == null)
+            return Response.status(409).entity("Authentication failed").build();
         SearchableFileSystem sfs;
         try {
             if (userNameToSFSMap.containsKey(username)) {//already logged in
@@ -198,6 +200,8 @@ public class UltraService {
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
+        if(username == null)
+            return Response.status(400).entity("Username cannot be empty").build();
         Certificate cert = inpherClient.getUserCertificate(username);
         return Response.status(201).entity(cert.toString()).build();
     }
@@ -234,8 +238,11 @@ public class UltraService {
             inpherClient.createSharingGroup(sfs, groupRequest.getGroupName(),
                     groupRequest.getUsernames());
         } catch (IllegalArgumentException e) {
-            return Response.status(409).entity("Illegal arguments: one user might not exist")
+            return Response.status(400).entity("Illegal arguments: one user might not exist")
                     .build();
+        }
+        catch (ExistingSharingGroupException e){
+            return Response.status(400).entity("Sharing group name already exists.").build();
         }
         return Response.status(201).entity("Sharing group successfully created.").build();
     }
@@ -259,6 +266,9 @@ public class UltraService {
         } catch (InpherRuntimeException | IllegalArgumentException e) {
             return Response.status(400).entity("An error occurred. Please check: " + e.getMessage())
                     .build();
+        }
+        if (dir == null || dir.trim().equals("")){
+            return Response.status(400).entity("Name of directory cannot be empty").build();
         }
 
         String result = "Dir created successfully : " + dir;
@@ -324,7 +334,7 @@ public class UltraService {
         try {
             FileUtils.copyInputStreamToFile(content, file);
         } catch (IOException e) {
-            return Response.status(400).entity("An error occured. Please check: " + e.getMessage())
+            return Response.status(400).entity("An error occurred. Please check: " + e.getMessage())
                     .build();
         }
         try {
@@ -441,7 +451,7 @@ public class UltraService {
             return Response.status(409).entity("Authentication failed").build();
         }
         if(query == null) {
-            return Response.status(409).entity("Empty query").build();
+            return Response.status(400).entity("Empty query").build();
         }
         SearchResponse results = sfs.search(query);
         ArrayList<HashMap<String, Object>> arr = new ArrayList<>();
@@ -471,6 +481,9 @@ public class UltraService {
 
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
+        }
+        if (query == null){
+            return Response.status(400).entity("Empty query").build();
         }
         SearchResponse results = sfs.search(query, page, numRes);
         ArrayList<RankedSearchResult> arr = new ArrayList<>();
@@ -606,6 +619,9 @@ public class UltraService {
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
+        if (fileName == null){
+            return Response.status(400).entity("File name cannot be empty").build();
+        }
         String owner;
         try {
             owner = sfs.elementOwner(FrontendPath.parse(fileName));
@@ -635,6 +651,9 @@ public class UltraService {
             sfs.addUser(groupName, userName);
         } catch (ExistingMemberException e) {
             return Response.status(400).entity("The user is already a part of the group.").build();
+        }
+        catch (NonExistingGroupException e){
+            return Response.status(400).entity("This group does not exist.").build();
         }
         return Response.ok("user added").build();
     }
@@ -778,11 +797,11 @@ public class UltraService {
             return null;
     }
 
-    static class SaltAndHash {
-        public final String salt;
-        public final String hash;
+    private static class SaltAndHash {
+        final String salt;
+        final String hash;
 
-        public SaltAndHash(String salt, String hash) {
+        SaltAndHash(String salt, String hash) {
             this.salt = salt;
             this.hash = hash;
         }
