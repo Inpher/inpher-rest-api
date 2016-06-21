@@ -1,0 +1,31 @@
+server {
+	listen 443 default_server;
+	listen [::]:443 default_server ipv6only=on;
+
+	ssl on;
+	ssl_certificate /home/ubuntu/keys/starinpherio-bundle.crt;
+	ssl_certificate_key /home/ubuntu/keys/starinpherio.key;
+	ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+	ssl_prefer_server_ciphers on;
+	ssl_ciphers 'kEECDH+ECDSA+AES128 kEECDH+ECDSA+AES256 kEECDH+AES128 kEECDH+AES256 kEDH+AES128 kEDH+AES256 DES-CBC3-SHA +SHA !aNULL !eNULL !LOW !kECDH !DSS !MD5 !EXP !PSK !SRP !CAMELLIA !SEED';
+	#add_header Strict-Transport-Security 'max-age=31536000';
+
+	root /usr/share/nginx/html;
+
+	server_name api.inpher.io;
+	underscores_in_headers on;
+        client_max_body_size 200M; 
+
+	location / {
+		try_files $uri $uri/ =404;
+	}
+
+	location /ultraRest {
+		more_set_headers 'Access-Control-Allow-Origin: *';
+		more_set_headers 'Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE, PUT';
+		more_set_headers 'Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, auth_token';
+		proxy_pass 'http://127.0.0.1:8080/ultraRest';
+                proxy_pass_request_headers on;
+                proxy_pass_header auth_token;    
+	}
+}

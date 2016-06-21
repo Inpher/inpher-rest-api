@@ -110,8 +110,8 @@
 	<dependency>
 	    <groupId>org.inpher</groupId>
 	    <artifactId>clientimpl</artifactId>
-	    <version>1.2</version>
-	    <scope>${inpher-version}</scope>
+	    <version>${inpher.version}</version>
+	    <scope>runtime</scope>
 	    <exclusions>
 		<exclusion>
 		    <groupId>com.fasterxml.jackson.core</groupId>
