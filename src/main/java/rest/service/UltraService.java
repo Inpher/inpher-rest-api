@@ -761,7 +761,12 @@ public class UltraService {
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        sfs.refreshUserKeyring(password);
+        try {
+            sfs.refreshUserKeyring(password);
+        }
+        catch(AuthenticationException e){
+            return Response.status(409).entity("Authentication failed").build();
+        }
         return Response.ok("user keyring is refreshed").build();
     }
 
