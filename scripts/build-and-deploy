@@ -4,6 +4,8 @@ TOMCAT_FOLDER=$HOME/apache-tomcat-8.0.36
 
 mvn clean package
 
+curl -d "" "http://localhost:8080/ultraRest/shutdown"
+
 $TOMCAT_FOLDER/bin/shutdown.sh
 sleep 1
 ps -aefl | grep tomcat | grep java | awk '{print "kill "$4}' | sh

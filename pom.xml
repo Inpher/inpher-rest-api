@@ -178,7 +178,7 @@
 		<configuration>
 		    <webResources>
 			<resource>
-			    <directory>target/docs/</directory>
+			    <!--<directory>target/docs/</directory>-->
 			</resource>
 		    </webResources>
 		</configuration>
