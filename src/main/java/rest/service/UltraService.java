@@ -361,22 +361,26 @@ public class UltraService {
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        File file = new File("temp.tmp");
-        FrontendPath filePath = FrontendPath.parse(fileName);
         try {
-            sfs.download(filePath, file);
-        } catch (PathNotFoundException e) {
-            return Response.status(400).entity("The file does not exist.").build();
-        } catch (PathIsDirectoryException e) {
-            return Response.status(400).entity("The path points to a directory").build();
-        } catch (InpherRuntimeException e) {
-            return Response.status(400).entity("An error occurred. Please check: " + e.getMessage())
-                    .build();
+            File file = File.createTempFile("download", ".tmp");
+            FrontendPath filePath = FrontendPath.parse(fileName);
+            try {
+                sfs.download(filePath, file);
+            } catch (PathNotFoundException e) {
+                return Response.status(400).entity("The file does not exist.").build();
+            } catch (PathIsDirectoryException e) {
+                return Response.status(400).entity("The path points to a directory").build();
+            } catch (InpherRuntimeException e) {
+                return Response.status(400).entity("An error occurred. Please check: " + e.getMessage()).build();
+            }
+            ResponseBuilder response = Response.ok((Object) file);
+            response.header("Content-Disposition",
+                    "attachment; filename=\"" + filePath.getLastElementName() + "\"");
+            return response.build();
         }
-        ResponseBuilder response = Response.ok((Object) file);
-        response.header("Content-Disposition",
-                "attachment; filename=\"" + filePath.getLastElementName() + "\"");
-        return response.build();
+        catch(IOException e){
+            return Response.status(400).entity("Impossible to create temporary file.").build();
+        }
     }
 
     @Path("delete")
