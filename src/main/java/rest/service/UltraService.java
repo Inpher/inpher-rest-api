@@ -138,7 +138,7 @@ public class UltraService {
         HashMap<String, Object> reps = new HashMap<>();
         reps.put("auth_token", token);
         reps.put("username", username);
-        return Response.status(201).entity(reps).build();
+        return Response.status(200).entity(reps).build();
     }
 
     @Path("login")
@@ -178,15 +178,6 @@ public class UltraService {
             inpherClient.logoutUser(sfs);
         }
         return Response.status(201).entity("logged out").build();
-    }
-
-    @Path("shutdown")
-    @POST
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response shutdown() {
-        inpherClient.close();
-        inpherClient = null;
-        return Response.status(201).entity("closed").build();
     }
 
     @Path("userCertificate")
@@ -725,8 +716,6 @@ public class UltraService {
         }
         try {
             sfs.unshareElement(groupName, shareName);
-        } catch (ElementAlreadySharedException e) {
-            return Response.status(400).entity("The element is already shared.").build();
         } catch (PathNotOwnedByUserException e) {
             return Response.status(400).entity("You can share only your own resources.").build();
         } catch (PathNotFoundException e) {
