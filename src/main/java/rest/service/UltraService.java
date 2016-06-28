@@ -322,8 +322,9 @@ public class UltraService {
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        File file = new File("temp.tmp");
+        File file = null;
         try {
+            file=File.createTempFile("inpherUpload", "tmp");
             FileUtils.copyInputStreamToFile(content, file);
         } catch (IOException e) {
             return Response.status(400).entity("An error occurred. Please check: " + e.getMessage())
@@ -337,6 +338,7 @@ public class UltraService {
             return Response.status(400).entity("An error occurred. Please check: " + e.getMessage())
                     .build();
         }
+        file.delete();
         return Response.ok("file uploaded").build();
     }
 
