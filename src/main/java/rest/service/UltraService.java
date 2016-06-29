@@ -16,6 +16,7 @@ import org.inpher.clientapi.efs.exceptions.PathNotFoundException;
 import org.inpher.clientapi.exceptions.*;
 
 import javax.ws.rs.*;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -321,9 +322,10 @@ public class UltraService {
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        File file;
+
+        File file = null;
         try {
-        	file = File.createTempFile("upload", ".tmp");
+            file=File.createTempFile("inpherUpload", "tmp");
             FileUtils.copyInputStreamToFile(content, file);
         } catch (IOException e) {
             return Response.status(400).entity("An error occurred. Please check: " + e.getMessage())
@@ -337,6 +339,7 @@ public class UltraService {
             return Response.status(400).entity("An error occurred. Please check: " + e.getMessage())
                     .build();
         }
+        file.delete();
         return Response.ok("file uploaded").build();
     }
 
@@ -365,9 +368,10 @@ public class UltraService {
             } catch (InpherRuntimeException e) {
                 return Response.status(400).entity("An error occurred. Please check: " + e.getMessage()).build();
             }
-            ResponseBuilder response = Response.ok((Object) file);
-            response.header("Content-Disposition",
+            ResponseBuilder response = Response.ok(new AutoDeleteFileInputStream(file));
+            response.header(HttpHeaders.CONTENT_DISPOSITION,
                     "attachment; filename=\"" + filePath.getLastElementName() + "\"");
+            response.header(HttpHeaders.CONTENT_LENGTH,file.length());
             return response.build();
         }
         catch(IOException e){
