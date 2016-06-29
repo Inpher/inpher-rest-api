@@ -1,0 +1,1289 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "_ultra API",
+        "description": "Search and share encrypted resources; it's easier than ever",
+        "version": "1.2"
+    },
+    "host": "api.inpher.io",
+    "basePath": "/ultraRest",
+    "tags": [
+        {
+            "name": "admin",
+            "description": "Admin operations"
+        },
+        {
+            "name": "user",
+            "description": "Operations about user"
+        }
+    ],
+    "schemes": [
+        "https"
+    ],
+    "paths": {
+        "/addUser": {
+            "get": {
+                "tags": [
+                    "admin"
+                ],
+                "description": "Add a user to an existing group",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "groupName",
+                        "in": "query",
+                        "type": "string",
+                        "required": true,
+                        "description": "The name of an existing group"
+                    },
+                    {
+                        "name": "userName",
+                        "in": "query",
+                        "required": true,
+                        "type": "string",
+                        "description": "The username of the invitied person"
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully added the user."
+                    },
+                    "400": {
+                        "description": "The user is already a part of the group or the group does not exist."
+                    },
+                    "409": {
+                        "description": "Authentication failed."
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/createSharingGroup": {
+            "post": {
+                "tags": [
+                    "admin",
+                    "user"
+                ],
+                "description": "Create a new sharing group.",
+                "operationId": "resource_UltraService_createSharingGroup_POST",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/GroupRequest"
+                        },
+                        "description": "Sharing group request"
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully created a group."
+                    },
+                    "400": {
+                        "description": "Invalid argument or not unique groupname."
+                    },
+                    "409": {
+                        "description": "Authentication failed."
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/delete": {
+            "delete": {
+                "tags": [
+                    "user"
+                ],
+                "description": "Deletes the element by path recursively or non-recursively. Only the owner of a path can delete an element.",
+                "operationId": "resource_UltraService_delete_DELETE",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "path",
+                        "in": "query",
+                        "type": "string",
+                        "description": ""
+                    },
+                    {
+                        "name": "recursive",
+                        "in": "query",
+                        "type": "boolean",
+                        "description": ""
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully deleted the resource."
+                    },
+                    "400": {
+                        "description": "Invalid agrument."
+                    },
+                    "409": {
+                        "description": "Authentication failed."
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/doesSharingGroupExists": {
+            "get": {
+                "tags": [
+                    "admin"
+                ],
+                "description": "Checks whether a sharing group exists.",
+                "operationId": "resource_UltraService_doesSharingGroupExists_GET",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "groupName",
+                        "in": "query",
+                        "type": "string",
+                        "description": "Name of the group"
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success."
+                    },
+                    "409": {
+                        "description": "Authentication failed."
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/download": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "description": "Download a file from the backend.",
+                "operationId": "resource_UltraService_downloadFile_GET",
+                "produces": [
+                    "text/plain"
+                ],
+                "parameters": [
+                    {
+                        "name": "fileName",
+                        "in": "query",
+                        "type": "string",
+                        "description": "The full path of the file"
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success."
+                    },
+                    "400": {
+                        "description": "Invalid argument."
+                    },
+                    "409": {
+                        "description": "Authentication failed."
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/exists": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "description": "Returns whether path exists on the backend or not.",
+                "operationId": "resource_UltraService_exists_GET",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "path",
+                        "in": "query",
+                        "type": "string",
+                        "description": "The full path of the resource"
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success."
+                    },
+                    "409": {
+                        "description": "Authentication failed."
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/isDirectory": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "description": "Checks whether path is a directory.",
+                "operationId": "resource_UltraService_isDirectory_GET",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "path",
+                        "in": "query",
+                        "type": "string",
+                        "description": "The full path of the resource"
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success."
+                    },
+                    "409": {
+                        "description": "Authentication failed."
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/isFile": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "description": "Checks whether path is a file.",
+                "operationId": "resource_UltraService_isFile_GET",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "path",
+                        "in": "query",
+                        "type": "string",
+                        "description": "The full path of the resource"
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success."
+                    },
+                    "409": {
+                        "description": "Authentication failed."
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/isMember": {
+            "get": {
+                "tags": [
+                    "admin"
+                ],
+                "description": "Verifies membership of a given user to the sharing group.",
+                "operationId": "resource_UltraService_isMember_GET",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "groupName",
+                        "in": "query",
+                        "type": "string",
+                        "description": "The sharing group to test"
+                    },
+                    {
+                        "name": "userName",
+                        "in": "query",
+                        "type": "string",
+                        "description": "The username to be checked for membership"
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success."
+                    },
+                    "409": {
+                        "description": "Authentication failed."
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/listAuthorizedGroups": {
+            "get": {
+                "tags": [
+                    "admin",
+                    "user"
+                ],
+                "description": "Get the list of groups that can access the given path.",
+                "operationId": "resource_UltraService_listAuthorizedGroups_GET",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "path",
+                        "in": "query",
+                        "type": "string",
+                        "description": "The full path of the resource"
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "An array of groupnames that can access the path.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "The resource does not exist."
+                    },
+                    "409": {
+                        "description": "Authentication failed."
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/listDir": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "description": "Similar to ls. If path is a file, returns an iterator that has one 'element' - the file. If path is a directory, returns an iterator over all the elements inside the directory.",
+                "operationId": "resource_UltraService_listDir_GET",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "dir",
+                        "in": "query",
+                        "type": "string",
+                        "description": ""
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "An array of elements in the directory.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Element"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "The directory does not exist."
+                    },
+                    "409": {
+                        "description": "Authentication failed."
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/listGroups": {
+            "get": {
+                "tags": [
+                    "admin",
+                    "user"
+                ],
+                "description": "The list of groups the user is a member of.",
+                "operationId": "resource_UltraService_listGroups_GET",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "An array of groupnames",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Authentication failed."
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/login": {
+            "post": {
+                "tags": [
+                    "admin",
+                    "user"
+                ],
+                "description": "Initializes the InpherClient client to work for an already existing user. Sets up the master keys for the purposes of encrypting data and indexes.",
+                "operationId": "resource_UltraService_login_POST",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "password",
+                        "in": "formData",
+                        "type": "string",
+                        "description": "users password"
+                    },
+                    {
+                        "name": "username",
+                        "in": "formData",
+                        "type": "string",
+                        "description": "username"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/Authentication"
+                        },
+                        "description": "Successful login, return and object that contains the auth_token and the username."
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/logout": {
+            "post": {
+                "tags": [
+                    "admin",
+                    "user"
+                ],
+                "description": "Logs out the user from the InpherClient client (cleans up the environment, removes all the user's workers).",
+                "operationId": "resource_UltraService_logout_POST",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully logged out"
+                    },
+                    "409": {
+                        "description": "Authentication failed."
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/mkdir": {
+            "post": {
+                "tags": [
+                    "user"
+                ],
+                "description": "Create a directory",
+                "operationId": "resource_UltraService_mkdir_POST",
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "dir",
+                        "in": "formData",
+                        "type": "string",
+                        "description": "The full path of the directory."
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully created a directory."
+                    },
+                    "400": {
+                        "description": "Invalid argument - the parent of the directory does not exist or the name of the new dir cannot be empty."
+                    },
+                    "409": {
+                        "description": "Authentication failed."
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/move": {
+            "post": {
+                "tags": [
+                    "user"
+                ],
+                "description": "Move oldPath into newPath.",
+                "operationId": "resource_UltraService_move_GET",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "newPath",
+                        "in": "formData",
+                        "type": "string",
+                        "description": "The full new path of the resource."
+                    },
+                    {
+                        "name": "oldPath",
+                        "in": "formData",
+                        "type": "string",
+                        "description": "The full old path of the resource."
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully moved the resource."
+                    },
+                    "400": {
+                        "description": "Invalid argument - the resource does not exist or the new path is already taken."
+                    },
+                    "409": {
+                        "description": "Authentication failed."
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/owner": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "description": "Return the element owner of path.",
+                "operationId": "resource_UltraService_owner_GET",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "fileName",
+                        "in": "query",
+                        "type": "string",
+                        "description": "The full path of the resource."
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "description": "Owner name",
+                            "type": "string"
+                        },
+                        "description": "Success."
+                    },
+                    "400": {
+                        "description": "Invalid argument - the resource does not exist."
+                    },
+                    "409": {
+                        "description": "Authentication failed."
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/refreshGroupKeyring": {
+            "post": {
+                "tags": [
+                    "admin"
+                ],
+                "description": "Used for rolling sharing group keys. Generates new keys for a sharing group and then re-encrypts the old content with the new keys.",
+                "operationId": "resource_UltraService_refreshGroupKeyring_GET",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "groupName",
+                        "in": "formData",
+                        "type": "string",
+                        "description": ""
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success."
+                    },
+                    "409": {
+                        "description": "Authentication failed."
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/refreshUserKeyring": {
+            "post": {
+                "tags": [
+                    "admin",
+                    "user"
+                ],
+                "description": "Used for rolling the user's keys. Generates new keys for the user and then re-encrypts the old content with the new keys. A new certificate has to be generated for the new public key.",
+                "operationId": "resource_UltraService_refreshUserKeyring_POST",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "password",
+                        "in": "formData",
+                        "type": "string",
+                        "description": ""
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Successful user keyring refresh."
+                    },
+                    "409": {
+                        "description": "Authentication failed."
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/register": {
+            "post": {
+                "tags": [
+                    "admin"
+                ],
+                "description": "Register puts a self-signed certificate for the user on the backend. In order to use properly signed certificates, it is required to first download the key from the backend. Forward it to a CA as a CSR and upload the CA signed certificate on the backend.",
+                "operationId": "resource_UltraService_register_POST",
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "password",
+                        "in": "formData",
+                        "type": "string",
+                        "description": "users password"
+                    },
+                    {
+                        "name": "username",
+                        "in": "formData",
+                        "type": "string",
+                        "description": "username"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Successful registration"
+                    },
+                    "400": {
+                        "description": "user already exists or the username and password are not vaid"
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/revokeUser": {
+            "post": {
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Revoke a user from a sharing group",
+                "description": "Revokes a user of a sharing group. If that user ownes shares, these shares will be unshared.",
+                "operationId": "resource_UltraService_revokeUser_GET",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "groupName",
+                        "in": "formData",
+                        "type": "string",
+                        "description": "The group name from which the user is to be revoked"
+                    },
+                    {
+                        "name": "userName",
+                        "in": "formData",
+                        "type": "string",
+                        "description": "The group member to be revoked"
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully revoked the user."
+                    },
+                    "409": {
+                        "description": "Authentication failed."
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/search": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Search in own and shared resources",
+                "description": "Search for the keywords on the backend. The search will be performed on the user resources and the shared resources",
+                "operationId": "resource_UltraService_search_GET",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "keywords",
+                        "in": "query",
+                        "type": "string",
+                        "description": "a list of keywords to search for. The corresponding query is a disjunction of all the keywords."
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "An array of search results",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/SearchResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Empty query"
+                    },
+                    "409": {
+                        "description": "Authentication failed"
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/searchPaged": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Search with defined paging in own and shared resources",
+                "description": "Search for the keywords on the backend. The search will be performed on the user resources and the shared resources with paging options",
+                "operationId": "resource_UltraService_searchPaged_GET",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "keywords",
+                        "in": "query",
+                        "type": "string",
+                        "description": "a list of keywords to search for. The corresponding query is a disjunction of all the keywords."
+                    },
+                    {
+                        "name": "numRes",
+                        "in": "query",
+                        "type": "integer",
+                        "description": "Number of results in a single call"
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "type": "integer",
+                        "description": "The index of the first result"
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "An array of search results",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/SearchResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Empty query"
+                    },
+                    "409": {
+                        "description": "Authentication failed"
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/shareElement": {
+            "post": {
+                "tags": [
+                    "user"
+                ],
+                "description": "Share an element with a sharing group using share name shareName. Only the owner of an element can share it.",
+                "operationId": "resource_UltraService_shareElement_GET",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "filePath",
+                        "in": "formData",
+                        "type": "string",
+                        "description": "the element to share (can be a file or a directory)"
+                    },
+                    {
+                        "name": "groupName",
+                        "in": "formData",
+                        "type": "string",
+                        "description": "the name of the sharing group to share the element with"
+                    },
+                    {
+                        "name": "shareName",
+                        "in": "formData",
+                        "type": "string",
+                        "description": "the name of the share."
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully shared element"
+                    },
+                    "400": {
+                        "description": "The element is already shared or The resource does not exist or You can only share your own resources."
+                    },
+                    "409": {
+                        "description": "Authentication failed"
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/unshareElement": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "description": "Unshare the element in sharing group groupName with share name shareName. Only the owner of the element can unshare it.",
+                "operationId": "resource_UltraService_unshareElement_GET",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "groupName",
+                        "in": "formData",
+                        "type": "string",
+                        "description": "the name of the group owning the element to unshare"
+                    },
+                    {
+                        "name": "shareName",
+                        "in": "formData",
+                        "type": "string",
+                        "description": "the name of the share to unshare."
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Element was successfully unshared"
+                    },
+                    "400": {
+                        "description": "The resource does not exist or You can only unshare your own resources."
+                    },
+                    "409": {
+                        "description": "Authentication failed"
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/upload": {
+            "post": {
+                "tags": [
+                    "user"
+                ],
+                "description": "Upload the file source on the backend at path destition",
+                "operationId": "resource_UltraService_uploadFile_POST",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "parameters": [
+                    {
+                        "name": "content",
+                        "in": "formData",
+                        "type": "file",
+                        "description": "the File to upload"
+                    },
+                    {
+                        "name": "contentDispositionHeader",
+                        "in": "formData",
+                        "type": "file",
+                        "description": "the File to upload"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "type": "string",
+                        "description": "The full path of the destination of the upload"
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Element uploaded sucessfully"
+                    },
+                    "400": {
+                        "description": "The resource does not exist or You can only unshare your own resources."
+                    },
+                    "409": {
+                        "description": "Authentication failed"
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        },
+        "/userCertificate": {
+            "get": {
+                "tags": [
+                    "admin",
+                    "user"
+                ],
+                "description": "Download the user certificate.",
+                "operationId": "resource_UltraService_userCertificate_GET",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "username",
+                        "in": "query",
+                        "type": "string",
+                        "description": ""
+                    },
+                    {
+                        "name": "auth_token",
+                        "in": "header",
+                        "type": "string",
+                        "description": "An authentication token returned upon login"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success."
+                    },
+                    "400": {
+                        "description": "Invalid username."
+                    },
+                    "409": {
+                        "description": "Authentication failed."
+                    },
+                    "default": {
+                        "description": "Unexpected error."
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "GroupRequest": {
+            "type": "object",
+            "required": [
+                "groupName",
+                "usernames"
+            ],
+            "properties": {
+                "groupName": {
+                    "type": "string",
+                    "description": "A unique group name"
+                },
+                "usernames": {
+                    "description": "An array of usernames that are going to be included in the group.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "description": "JSON object that contains all the information required to create a sharing group"
+        },
+        "User": {
+            "type": "object",
+            "required": [
+                "name",
+                "password"
+            ],
+            "properties": {
+                "name": {
+                    "description": "A unique username.",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "A strong password.",
+                    "type": "string"
+                }
+            },
+            "description": "An user object to make requests to user related API calls."
+        },
+        "Authentication": {
+            "type": "object",
+            "properties": {
+                "auth_token": {
+                    "description": "An authentication token used to access the REST API methods.",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "The username, which was logged in.",
+                    "type": "string"
+                }
+            },
+            "description": "An authentication object returned upon login."
+        },
+        "Element": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The path of the element.",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "The type of the element - either DOCUMENT, DIRECTORY, SHARE_LINK.",
+                    "type": "string"
+                },
+                "size": {
+                    "description": "The size of the element",
+                    "type": "number"
+                }
+            },
+            "description": "An object returned by the server on list directory. The object describes an element that belongs to a specific dir."
+        },
+        "SearchResponse": {
+            "type": "object",
+            "properties": {
+                "totalHits": {
+                    "description": "Total number of results for the search",
+                    "type": "string"
+                },
+                "results": {
+                    "description": "The results that were fetched from the server",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Results"
+                    }
+                }
+            },
+            "description": "An object returned by the server on search. It contains the results that were fetched and the total number of results for the query."
+        },
+        "Results": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The full path of the search result",
+                    "type": "string"
+                },
+                "score": {
+                    "description": "The score of the search hit",
+                    "type": "number"
+                }
+            },
+            "description": "An object that holds the path and the score of a search result"
+        }
+    }
+}

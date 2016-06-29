@@ -176,7 +176,7 @@ public class UltraService {
             userNameToSFSMap.remove(username);
             inpherClient.logoutUser(sfs);
         }
-        return Response.status(201).entity("logged out").build();
+        return Response.status(200).entity("logged out").build();
     }
 
     @Path("userCertificate")
@@ -194,7 +194,7 @@ public class UltraService {
         if(username == null)
             return Response.status(400).entity("Username cannot be empty").build();
         Certificate cert = inpherClient.getUserCertificate(username);
-        return Response.status(201).entity(cert.toString()).build();
+        return Response.status(200).entity(cert.toString()).build();
     }
 
 
@@ -210,7 +210,7 @@ public class UltraService {
             return Response.status(409).entity("Authentication failed").build();
         }
         Boolean exists = inpherClient.doesSharingGroupExists(groupName);
-        return Response.status(201).entity(exists.toString()).build();
+        return Response.status(200).entity(exists.toString()).build();
     }
 
     @Path("createSharingGroup")
@@ -321,8 +321,9 @@ public class UltraService {
         if (sfs == null) {
             return Response.status(409).entity("Authentication failed").build();
         }
-        File file = new File("temp.tmp");
+        File file;
         try {
+        	file = File.createTempFile("upload", ".tmp");
             FileUtils.copyInputStreamToFile(content, file);
         } catch (IOException e) {
             return Response.status(400).entity("An error occurred. Please check: " + e.getMessage())
@@ -715,7 +716,7 @@ public class UltraService {
         try {
             sfs.unshareElement(groupName, shareName);
         } catch (PathNotOwnedByUserException e) {
-            return Response.status(400).entity("You can share only your own resources.").build();
+            return Response.status(400).entity("You can unshare only your own resources.").build();
         } catch (PathNotFoundException e) {
             return Response.status(400).entity("The resource does not exist.").build();
         } catch (InpherRuntimeException e) {
