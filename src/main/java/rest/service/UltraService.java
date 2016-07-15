@@ -338,7 +338,7 @@ public class UltraService {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response listDirPaged(@QueryParam("dir") String dir, @QueryParam("page") int page,
-			@QueryParam("num") int num, @HeaderParam("auth_token") String authToken) {
+			@QueryParam("numRes") int numRes, @HeaderParam("auth_token") String authToken) {
 		if (authToken == null) {
 			return Response.status(409).entity("Authentication failed").build();
 		}
@@ -347,13 +347,13 @@ public class UltraService {
 			return Response.status(409).entity("Authentication failed").build();
 		}
 		ArrayList<Map<String, Object>> arr = new ArrayList<>();
+		int i = 0;
 		try {
 			BackendIterator<Element> iterator = sfs.list(FrontendPath.parse(dir));
-			int i = 0;
 			while (iterator.hasNext()) {
 				i++;
 				Element el = iterator.next();
-				if (i >= page * num && i < ((page * num) + num)) {
+				if (i >= page * numRes && i <= ((page * numRes) + numRes)) {
 					Map<String, Object> elJS = elementToJSObject(el);
 					elJS.put("groups",
 							sfs.getAuthorizedGroups(el.getFrontendPath()).stream().collect(Collectors.toList()));
@@ -372,6 +372,7 @@ public class UltraService {
 		}
 		HashMap<String, Object> ret = new HashMap<>();
 		ret.put("list", arr);
+		ret.put("totalNumber", i);
 		return Response.ok(ret).build();
 	}
 
