@@ -546,17 +546,7 @@ public class UltraService {
 		}
 		try {
 			SearchResponse results = sfs.search(query);
-			ArrayList<HashMap<String, Object>> arr = new ArrayList<>();
-			for (RankedSearchResult el : results.getAllRankedSearchResults()) {
-				HashMap<String, Object> rankedResult = new HashMap<>();
-				rankedResult.put("score", el.getScore());
-				rankedResult.put("path", el.getPath().toString());
-				arr.add(rankedResult);
-			}
-
-			HashMap<String, Object> ret = new HashMap<>();
-			ret.put("totalHits", results.getTotalHits());
-			ret.put("results", arr);
+			HashMap<String, Object> ret = searchResultsToJSON(results);
 			return Response.ok(ret).build();
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -583,17 +573,27 @@ public class UltraService {
 		}
 		try {
 			SearchResponse results = sfs.search(query, page, numRes);
-			ArrayList<RankedSearchResult> arr = new ArrayList<>();
-			arr.addAll(results.getAllRankedSearchResults());
-
-			HashMap<String, Object> ret = new HashMap<>();
-			ret.put("totalHits", results.getTotalHits());
-			ret.put("results", arr);
+			HashMap<String, Object> ret = searchResultsToJSON(results);
 			return Response.ok(ret).build();
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 			return Response.status(400).entity("A problem occurred, please try again later.").build();
 		}
+	}
+
+	private HashMap<String, Object> searchResultsToJSON(SearchResponse results) {
+		ArrayList<HashMap<String, Object>> arr = new ArrayList<>();
+		for (RankedSearchResult el : results.getAllRankedSearchResults()) {
+			HashMap<String, Object> rankedResult = new HashMap<>();
+			rankedResult.put("score", el.getScore());
+			rankedResult.put("path", el.getPath().toString());
+			arr.add(rankedResult);
+		}
+
+		HashMap<String, Object> ret = new HashMap<>();
+		ret.put("totalHits", results.getTotalHits());
+		ret.put("results", arr);
+		return ret;
 	}
 
 	@Path("isFile")
