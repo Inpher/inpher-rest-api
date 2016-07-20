@@ -589,7 +589,7 @@ public class UltraService {
 			HashMap<String, Object> ret = new HashMap<>();
 			ret.put("totalHits", results.getTotalHits());
 			ret.put("results", arr);
-			return Response.ok(ret.toString()).build();
+			return Response.ok(ret).build();
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 			return Response.status(400).entity("A problem occurred, please try again later.").build();
