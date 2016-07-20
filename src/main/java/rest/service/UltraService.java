@@ -670,10 +670,7 @@ public class UltraService {
 		}
 		try {
 			Collection<String> groups = sfs.listGroups();
-			ArrayList<String> arr = new ArrayList<>();
-			for (String group : groups) {
-				arr.add(group);
-			}
+			ArrayList<String> arr = new ArrayList<>(groups);
 			return Response.ok(arr).build();
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
