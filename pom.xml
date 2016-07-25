@@ -114,7 +114,7 @@
 		<!-- -->
 		<dependency>
 			<groupId>org.inpher</groupId>
-			<artifactId>clientimpl</artifactId>
+			<artifactId>clientimpl-all</artifactId>
 			<version>${inpher.version}</version>
 			<scope>runtime</scope>
 			<exclusions>
