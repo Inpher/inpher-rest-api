@@ -401,24 +401,28 @@ public class UltraService {
 
 		File file = null;
 		try {
-			file = File.createTempFile("inpherUpload", "tmp");
-			FileUtils.copyInputStreamToFile(content, file);
-		} catch (IOException e) {
-			return Response.status(400).entity("An error occurred. Please check: " + e.getMessage()).build();
+			try {
+				file = File.createTempFile("inpherUpload", "tmp");
+				FileUtils.copyInputStreamToFile(content, file);
+			} catch (IOException e) {
+				return Response.status(400).entity("An error occurred. Please check: " + e.getMessage()).build();
+			}
+			try {
+				sfs.upload(file, FrontendPath.parse(name));
+			} catch (ParentNotFoundException e) {
+				log.error(e.getMessage(), e);
+				return Response.status(400).entity("The parent of the dir does not exists.").build();
+			} catch (InpherRuntimeException | IllegalArgumentException e) {
+				log.error(e.getMessage(), e);
+				return Response.status(400).entity("An error occurred. Please check: " + e.getMessage()).build();
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+				return Response.status(400).entity("A problem occurred, please try again later.").build();
+			}
+		} finally {
+			if (file != null)
+				file.delete();
 		}
-		try {
-			sfs.upload(file, FrontendPath.parse(name));
-		} catch (ParentNotFoundException e) {
-			log.error(e.getMessage(), e);
-			return Response.status(400).entity("The parent of the dir does not exists.").build();
-		} catch (InpherRuntimeException | IllegalArgumentException e) {
-			log.error(e.getMessage(), e);
-			return Response.status(400).entity("An error occurred. Please check: " + e.getMessage()).build();
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			return Response.status(400).entity("A problem occurred, please try again later.").build();
-		}
-		file.delete();
 		return Response.ok("file uploaded").build();
 	}
 
