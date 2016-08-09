@@ -1,0 +1,10 @@
+#!/bin/sh
+
+TOMCAT_FOLDER=/opt/tomcat
+
+curl -d "" "http://localhost:8080/ultraRest/shutdown"
+
+$TOMCAT_FOLDER/bin/shutdown.sh
+sleep 2
+$TOMCAT_FOLDER/bin/startup.sh
+
