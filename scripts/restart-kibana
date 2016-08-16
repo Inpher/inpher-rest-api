@@ -1,0 +1,5 @@
+#!/bin/sh
+sleep 15
+sudo service kibana restart
+curl -XPUT http://localhost:9200/.kibana/index-pattern/encindex -d '{"title" : "encindex"}'
+curl -XPUT http://localhost:9200/.kibana/config/4.5.4 -d '{"defaultIndex" : "encindex"}'

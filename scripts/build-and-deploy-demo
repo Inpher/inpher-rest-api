@@ -8,8 +8,8 @@ curl -d "" "http://localhost:8080/ultraRest/shutdown"
 
 $TOMCAT_FOLDER/bin/shutdown.sh
 sleep 1
-#ps -aefl | grep tomcat | grep java | awk '{print "kill "$4}' | sh
-#ps -aefl | grep tomcat | grep java | awk '{print "kill -9 "$4}' | sh
+ps -aefl | grep tomcat | grep java | awk '{print "kill "$4}' | sh
+ps -aefl | grep tomcat | grep java | awk '{print "kill -9 "$4}' | sh
 sleep 1
 rm -rf $TOMCAT_FOLDER/logs/*
 rm -rf $TOMCAT_FOLDER/webapps/ultraRest*

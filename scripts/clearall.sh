@@ -10,11 +10,13 @@ OUT="$(echo "$OUT"; echo "<br>Restarting rabbitMQ: <br>"; docker run --name rabb
 OUT="$(echo "$OUT"; echo "<br>Restarting elastic: <br>"; docker run --name elastic -td -p 9300:9300 -p 9200:9200 inpher/elastic-frequency:_ultra)"
 OUT="$(echo "$OUT"; echo "<br>Restarting zookeeper: <br>"; docker run -td --name zookeeper -p 2181:2181 jplock/zookeeper)" 
 OUT="$(echo "$OUT"; echo "<br>Restarting HDFS and HUE: <br>"; /home/ubuntu/projects/inpher-rest-api/scripts/install-hue)" 
-OUT="$(echo "$OUT"; echo "<br>Restarting Tomcat: <br>"; /home/ubuntu/projects/inpher-rest-api/scripts/restart-tomcat)" 
+OUT="$(echo "$OUT"; echo "<br>Restarting Tomcat: <br>")"
+/home/ubuntu/projects/inpher-rest-api/scripts/restart-tomcat 
+OUT="$(echo "$OUT"; echo "<br>Restarting Kibana: <br>"; /home/ubuntu/projects/inpher-rest-api/scripts/restart-kibana)"
+OUT="$(echo "$OUT"; echo "<br>Restarting Ultraweb: <br>"; /home/ubuntu/projects/ultraweb/scripts/restart-ultra)"
 
  echo "Content-type: text/html"
  echo ""
- echo "<html><head><title>Cleanup</title></head><body>"
- echo "Cleaning up demo environment: this may take up to 2mins"
+ echo "<h3>Cleanup completed</h3>"
  echo "<br><br>Log:<br> $OUT"
- echo "</body></html>"
+ echo "<br><br>"

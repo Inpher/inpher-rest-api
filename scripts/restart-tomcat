@@ -5,6 +5,9 @@ TOMCAT_FOLDER=/opt/tomcat
 curl -d "" "http://localhost:8080/ultraRest/shutdown"
 
 $TOMCAT_FOLDER/bin/shutdown.sh
-sleep 2
+sleep 1
+ps -aefl | grep tomcat | grep java | awk '{print "kill "$4}' | sh
+ps -aefl | grep tomcat | grep java | awk '{print "kill -9 "$4}' | sh
+sleep 1
 $TOMCAT_FOLDER/bin/startup.sh
 
