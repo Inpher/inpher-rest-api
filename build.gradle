@@ -1,0 +1,45 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'war'
+
+group = 'inpher'
+version = '1.2.3'
+
+description = """ultraRest Maven Webapp"""
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+
+repositories {
+     maven { url "http://dp.inpher.io/maven" }
+     mavenCentral()
+}
+
+dependencies {
+    compile 'log4j:log4j:1.2.17'
+    compile 'org.bouncycastle:bcprov-jdk15on:1.54'
+    compile 'commons-io:commons-io:2.4'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.7.4'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.7.4'
+    compile 'com.fasterxml.jackson.core:jackson-annotations:2.7.4'
+    
+    //include tomcat + jersey v2 dependency
+    compile 'org.glassfish.jersey.core:jersey-server:2.23.1'
+    compile 'org.glassfish.jersey.containers:jersey-container-servlet:2.23.1'
+    compile 'org.glassfish.jersey.media:jersey-media-multipart:2.23.1'
+    compile 'org.glassfish.jersey.media:jersey-media-json-jackson:2.23.1'
+    compile 'org.apache.cxf:cxf-rt-frontend-jaxrs:3.1.6'
+    compile 'org.apache.tomcat:tomcat-servlet-api:8.0.35'
+    compile 'org.inpher:clientapi:1.2.3'
+    runtime('org.inpher:clientimpl-all:1.2.3') {
+exclude(module: 'jackson-databind')
+exclude(module: 'jackson-jaxrs')
+exclude(module: 'jackson-mapper-asl')
+exclude(module: 'jersey-core')
+exclude(module: 'jersey-json')
+exclude(module: 'jersey-server')
+    }
+    testCompile 'junit:junit:4.11.2'
+    //system 'com.sun:tools:1.6.0'
+}
