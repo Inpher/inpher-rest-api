@@ -24,7 +24,7 @@ docker cp /tmp/tmp.core-site.xml hdfs:/usr/local/hadoop/etc/hadoop/core-site.xml
 docker cp $HDFSCONFIG2 hdfs:/usr/local/hadoop/etc/hadoop/hdfs-site.xml
 
 ## Remove tempfile
-#rm /tmp/tmp.core-sites.xml
+rm /tmp/tmp.core-sites.xml
 
 # Restart DFS on HDFS
 docker exec hdfs /usr/local/hadoop/sbin/stop-dfs.sh
