@@ -282,7 +282,7 @@ public class UltraService {
 
     @Path("deleteSharingGroup")
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response deleteSharingGroup(@FormParam("groupName") String groupName,
             @HeaderParam("auth_token") String authToken) {
         if (authToken == null) {
