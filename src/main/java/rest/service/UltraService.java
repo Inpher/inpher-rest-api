@@ -865,7 +865,7 @@ public class UltraService {
             return Response.status(400).entity("This group does not exist.").build();
         } catch (Exception e) {
             log.error(e.getMessage(), e);
-            return Response.status(400).entity("A problem occurred, please try again later.")
+            return Response.status(400).entity("The added user does not exist or a problem occurred.")
                     .build();
         }
         return Response.ok("user added").build();
