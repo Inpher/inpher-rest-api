@@ -1,0 +1,1 @@
+tail -f inpher.log | grep --line-buffered  INFO |  sed -u  's/[()]/ /g' | sed -u 's/ \+/ /g' |  awk -F "OR" '{LIMIT=4;printf("%s",$1);i=2;while($i != "" && i < LIMIT){printf(" OR %s", $i);i++;}printf("\n")}'
