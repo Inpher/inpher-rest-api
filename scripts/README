@@ -6,4 +6,4 @@ These two scripts will not delete the data on hdfs, rabbitmq and elasticsearch.
 The clearall.sh script cleans up the environment and resets everything
 
 In order to be available as a cgi script hosted by apache2, you need to 
-copy it to /usr/lib/cgi-bin/
+copy it to /usr/lib/cgi-bin/clearall.sh
