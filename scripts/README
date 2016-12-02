@@ -1,4 +1,9 @@
-The clearall-demo.sh script cleans up the environment and resets everything
+To build the rest api and launch the Tomcat server on ultraweb, run build-and-deploy-gradle from the project root directory.
+To build the rest api and launch the Tomcat server on demo-ultraweb, run build-and-deploy-gradle-demo from the project root directory.
+These two scripts will not delete the data on hdfs, rabbitmq and elasticsearch.
+
+
+The clearall.sh script cleans up the environment and resets everything
 
 In order to be available as a cgi script hosted by apache2, you need to 
 copy it to /usr/lib/cgi-bin/clearall.sh
