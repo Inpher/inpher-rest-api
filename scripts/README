@@ -2,6 +2,7 @@ To build the rest api and launch the Tomcat server on ultraweb, run build-and-de
 To build the rest api and launch the Tomcat server on demo-ultraweb, run build-and-deploy-gradle-demo from the project root directory.
 These two scripts will not delete the data on hdfs, rabbitmq and elasticsearch.
 
+To pretify the logs, run the showLog.sh script from the project root directory
 
 The clearall.sh script cleans up the environment and resets everything
 
