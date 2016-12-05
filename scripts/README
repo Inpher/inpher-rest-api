@@ -4,7 +4,8 @@ These two scripts will not delete the data on hdfs, rabbitmq and elasticsearch.
 
 To pretify the logs, run the showLog.sh script from the project root directory
 
-The clearall.sh script cleans up the environment and resets everything
+The clearall-api.sh script cleans up the environment and resets everything on ultraweb.
+The same script for demo-ultraweb is clearall-api-demo.sh.
 
 In order to be available as a cgi script hosted by apache2, you need to 
-copy it to /usr/lib/cgi-bin/clearall.sh
+copy it to /usr/lib/cgi-bin/clearall.sh (or make a symbolic link).
