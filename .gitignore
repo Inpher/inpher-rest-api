@@ -2,9 +2,12 @@
 .idea/codeStyleSettings.xml
 .idea/
 *.iml
+*.log
 *.csv
 **/doc/
+**/build/
 **/target/
 .project
+**/.gradle/
 .settings
 .classpath
